@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { 
   Search, 
-  ShieldAlert, 
+  ArrowRight, 
   AlertTriangle, 
-  Globe, 
-  Terminal, 
+  ShieldCheck, 
+  Sparkles, 
+  Layers, 
   Download, 
-  ExternalLink, 
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  Lock,
-  Layers,
-  Sparkles
+  Lock, 
+  Terminal,
+  ShieldAlert
 } from 'lucide-react';
 import { ScanResponse, SampleUrl } from '../types';
 import { api } from '../services/api';
@@ -23,33 +20,33 @@ import { exportScanToPdf } from '../services/pdfExporter';
 
 interface UrlInvestigationProps {
   currentScan: ScanResponse | null;
-  setCurrentScan: (scan: ScanResponse | null) => void;
+  setCurrentScan: (scan: ScanResponse) => void;
   samples: SampleUrl[];
 }
 
-export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan, setCurrentScan, samples }) => {
+export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
+  currentScan,
+  setCurrentScan,
+  samples
+}) => {
   const [urlInput, setUrlInput] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [followRedirects, setFollowRedirects] = useState<boolean>(true);
   const [enableIntel, setEnableIntel] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleScan = async (targetUrl?: string) => {
-    const urlToScan = targetUrl || urlInput;
-    if (!urlToScan || !urlToScan.trim()) {
-      setErrorMessage('Please enter a valid URL to investigate.');
-      return;
-    }
+  const handleScan = async (overrideUrl?: string) => {
+    const target = overrideUrl || urlInput;
+    if (!target.trim()) return;
 
-    setErrorMessage(null);
     setIsLoading(true);
+    setErrorMessage(null);
 
     try {
-      const response = await api.createScan(urlToScan.trim(), followRedirects, enableIntel);
-      setCurrentScan(response);
-      setUrlInput(urlToScan);
+      const result = await api.createScan(target, followRedirects, enableIntel);
+      setCurrentScan(result);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Threat investigation failed');
+      setErrorMessage(err.message || 'Investigation request failed');
     } finally {
       setIsLoading(false);
     }
@@ -57,38 +54,36 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Top Search & Submission Console */}
-      <div className="bg-[#0a1220] border border-cyan-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl -z-10"></div>
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+      {/* Target URL Search & Submission Card */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 gap-4 mb-4">
           <div>
-            <h1 className="text-lg font-black text-white font-mono tracking-wide uppercase flex items-center space-x-2">
-              <Zap className="w-5 h-5 text-cyan-400" />
-              <span>Multi-Layer URL Threat Investigation</span>
+            <h1 className="text-base font-bold text-slate-900 font-mono tracking-wide uppercase flex items-center space-x-2">
+              <Search className="w-5 h-5 text-cyan-600" />
+              <span>Multi-Layer URL Threat Forensics</span>
             </h1>
-            <p className="text-xs text-slate-400">
-              Deterministic syntactic analysis, brand homoglyph radar, SSRF-guarded redirects & zero-hour suspicion
+            <p className="text-xs text-slate-500 mt-0.5">
+              Deterministic parsing, Unicode confusables, SSRF-safe redirect verification & zero-hour suspicion
             </p>
           </div>
 
-          {/* Scan Options */}
+          {/* Safe Network & Analysis Toggles */}
           <div className="flex items-center space-x-4 text-xs font-mono">
-            <label className="flex items-center space-x-2 text-slate-300 cursor-pointer">
+            <label className="flex items-center space-x-2 text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={followRedirects}
                 onChange={(e) => setFollowRedirects(e.target.checked)}
-                className="rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0"
+                className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
               />
               <span>SSRF-Safe Redirects</span>
             </label>
-            <label className="flex items-center space-x-2 text-slate-300 cursor-pointer">
+            <label className="flex items-center space-x-2 text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={enableIntel}
                 onChange={(e) => setEnableIntel(e.target.checked)}
-                className="rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0"
+                className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
               />
               <span>Threat Intel</span>
             </label>
@@ -99,7 +94,7 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <Search className="w-5 h-5 text-cyan-400" />
+              <Search className="w-5 h-5 text-cyan-600" />
             </div>
             <input
               type="text"
@@ -107,18 +102,18 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleScan()}
               placeholder="Submit URL (e.g., http://paypa1-security.com/login or paste suspicious link)..."
-              className="w-full pl-11 pr-4 py-3 bg-[#050b14] border border-slate-700 rounded-xl text-sm font-mono text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+              className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600 transition-all"
             />
           </div>
 
           <button
             onClick={() => handleScan()}
             disabled={isLoading}
-            className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center justify-center space-x-2 shrink-0 disabled:opacity-50"
+            className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-cyan-600/20 flex items-center justify-center space-x-2 shrink-0 disabled:opacity-50"
           >
             {isLoading ? (
               <>
-                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span>Investigating...</span>
               </>
             ) : (
@@ -131,15 +126,15 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
         </div>
 
         {errorMessage && (
-          <div className="mt-3 p-3 bg-red-950/80 border border-red-800 rounded-lg text-xs font-mono text-red-300 flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-mono text-red-700 flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Benchmark Quick Presets for Demo / Hackathon */}
-        <div className="mt-4 pt-4 border-t border-slate-800/80">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-2">
+        <div className="mt-4 pt-4 border-t border-slate-200">
+          <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider block mb-2 font-semibold">
             Benchmark Test Dataset (1-Click Evaluation):
           </span>
           <div className="flex flex-wrap gap-2">
@@ -150,7 +145,7 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
                   setUrlInput(s.url);
                   handleScan(s.url);
                 }}
-                className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 transition-all"
+                className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-100 border border-slate-200 hover:border-cyan-400 hover:bg-slate-200 text-slate-700 hover:text-cyan-800 transition-all"
               >
                 {s.label}
               </button>
@@ -163,18 +158,18 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
       {currentScan ? (
         <div className="space-y-6">
           {/* Top Banner: Normalized Identity & Hash */}
-          <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
             <div className="space-y-1">
               <div className="flex items-center space-x-2 text-xs font-mono">
-                <span className="text-slate-400 uppercase">Target Host:</span>
-                <span className="text-cyan-400 font-bold text-sm">{currentScan.url_components.hostname}</span>
-                <span className="text-slate-400">•</span>
-                <span className="text-slate-400">Registrable:</span>
-                <span className="text-white font-mono">{currentScan.url_components.registrable_domain}</span>
+                <span className="text-slate-500 uppercase">Target Host:</span>
+                <span className="text-cyan-700 font-bold text-sm">{currentScan.url_components.hostname}</span>
+                <span className="text-slate-300">•</span>
+                <span className="text-slate-500">Registrable:</span>
+                <span className="text-slate-900 font-mono font-semibold">{currentScan.url_components.registrable_domain}</span>
               </div>
-              <div className="text-[11px] font-mono text-slate-400 flex items-center space-x-2">
+              <div className="text-[11px] font-mono text-slate-500 flex items-center space-x-2">
                 <span>Normalized URL:</span>
-                <span className="text-slate-300 truncate max-w-xl">{currentScan.url_components.normalized_url}</span>
+                <span className="text-slate-700 truncate max-w-xl">{currentScan.url_components.normalized_url}</span>
               </div>
             </div>
 
@@ -182,7 +177,7 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
             <div className="flex items-center space-x-2 shrink-0">
               <button
                 onClick={() => exportScanToPdf(currentScan)}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-mono font-bold text-xs uppercase rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center space-x-2"
+                className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono font-bold text-xs uppercase rounded-xl transition-all shadow-md shadow-cyan-600/20 flex items-center space-x-2"
               >
                 <Download className="w-4 h-4" />
                 <span>Export PDF Dossier</span>
@@ -196,61 +191,61 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
               <RiskGauge risk={currentScan.risk} />
             </div>
 
-            <div className="lg:col-span-7 bg-[#0d1526] border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+            <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-sm">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-violet-400" />
-                    <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-violet-600" />
+                    <span className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
                       AI Incident Explanation
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono bg-violet-950/60 text-violet-300 border border-violet-800 px-2 py-0.5 rounded uppercase">
+                  <span className="text-[10px] font-mono bg-violet-100 text-violet-800 border border-violet-200 px-2 py-0.5 rounded uppercase font-semibold">
                     {currentScan.attack_story.generator_type}
                   </span>
                 </div>
 
-                <div className="text-xs font-mono text-cyan-400 font-bold mb-2">
+                <div className="text-xs font-mono text-cyan-700 font-bold mb-2">
                   {currentScan.attack_story.suspected_attack_category}
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800/80 mb-3">
+                <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
                   {currentScan.attack_story.executive_summary}
                 </p>
 
-                <div className="text-[11px] font-mono text-slate-400 mb-1 font-semibold uppercase">
+                <div className="text-[11px] font-mono text-slate-500 mb-1 font-semibold uppercase">
                   Potential Impact:
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-600">
                   {currentScan.attack_story.potential_impact}
                 </p>
               </div>
 
               {/* SHA-256 Vault Hash Indicator */}
-              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-500">
                 <span className="flex items-center space-x-1">
-                  <Lock className="w-3 h-3 text-cyan-400" />
+                  <Lock className="w-3 h-3 text-cyan-600" />
                   <span>SHA-256 Integrity Hash:</span>
                 </span>
-                <span className="text-cyan-300/80 truncate max-w-xs">{currentScan.report_hash}</span>
+                <span className="text-cyan-800 truncate max-w-xs font-semibold">{currentScan.report_hash}</span>
               </div>
             </div>
           </div>
 
           {/* Zero-Hour Suspicion Alert (if present) */}
           {currentScan.zero_hour_suspicion.is_unlisted_suspicious && (
-            <div className="bg-gradient-to-r from-red-950/40 via-[#0d1526] to-red-950/40 border border-red-500/40 rounded-xl p-4 flex items-start space-x-3 shadow-lg">
-              <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <div className="bg-gradient-to-r from-red-50 via-white to-red-50 border border-red-300 rounded-xl p-4 flex items-start space-x-3 shadow-sm">
+              <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs font-mono font-bold text-red-400 uppercase tracking-wide">
+                  <span className="text-xs font-mono font-bold text-red-700 uppercase tracking-wide">
                     ZERO-HOUR SUSPICION TRIGGERED ({currentScan.zero_hour_suspicion.suspicion_level})
                   </span>
-                  <span className="text-[10px] font-mono bg-red-900/60 text-red-200 px-2 py-0.2 rounded">
+                  <span className="text-[10px] font-mono bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold">
                     Anomaly Score: {currentScan.zero_hour_suspicion.structural_anomaly_score}/10
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-700 mt-1 leading-relaxed">
                   {currentScan.zero_hour_suspicion.summary}
                 </p>
               </div>
@@ -266,31 +261,31 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
           {/* Redirect Time Machine & Threat Intelligence Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Redirect Time Machine */}
-            <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-5">
-              <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider mb-3 flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-cyan-400" />
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
+                <Layers className="w-4 h-4 text-cyan-600" />
                 <span>Redirect Time Machine ({currentScan.redirect_chain.length} observed hops)</span>
               </h3>
               {currentScan.redirect_chain.length === 0 ? (
-                <div className="text-xs font-mono text-slate-400 py-6 text-center">
+                <div className="text-xs font-mono text-slate-500 py-6 text-center">
                   No multi-hop redirects observed. Target evaluated as direct destination.
                 </div>
               ) : (
                 <div className="space-y-2.5">
                   {currentScan.redirect_chain.map((hop, i) => (
-                    <div key={i} className="p-3 bg-slate-900/60 rounded-lg border border-slate-800 text-xs font-mono">
+                    <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono">
                       <div className="flex items-center justify-between text-[11px] mb-1">
-                        <span className="text-cyan-400 font-bold">Hop #{hop.hop_number}</span>
+                        <span className="text-cyan-700 font-bold">Hop #{hop.hop_number}</span>
                         <span className={`px-2 py-0.5 rounded font-bold ${
-                          hop.blocked_reason ? 'bg-red-950 text-red-400' : 'bg-slate-800 text-slate-300'
+                          hop.blocked_reason ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-700'
                         }`}>
                           {hop.blocked_reason ? 'BLOCKED' : `HTTP ${hop.status_code || 200}`}
                         </span>
                       </div>
-                      <div className="text-white truncate">{hop.hostname}</div>
-                      <div className="text-[10px] text-slate-400 truncate">{hop.url}</div>
+                      <div className="text-slate-900 truncate font-semibold">{hop.hostname}</div>
+                      <div className="text-[10px] text-slate-500 truncate">{hop.url}</div>
                       {hop.blocked_reason && (
-                        <div className="mt-1 text-[11px] text-red-300 bg-red-950/80 p-1.5 rounded border border-red-800">
+                        <div className="mt-1 text-[11px] text-red-700 bg-red-50 p-1.5 rounded border border-red-200">
                           {hop.blocked_reason}
                         </div>
                       )}
@@ -301,24 +296,24 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
             </div>
 
             {/* Threat Intelligence Lookups */}
-            <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-5">
-              <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider mb-3 flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-violet-400" />
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4 text-violet-600" />
                 <span>Reputation Providers Telemetry</span>
               </h3>
               <div className="space-y-2.5">
                 {currentScan.provider_findings.map((p, i) => (
-                  <div key={i} className="p-3 bg-slate-900/60 rounded-lg border border-slate-800 text-xs font-mono flex items-center justify-between">
+                  <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono flex items-center justify-between">
                     <div>
-                      <div className="text-white font-bold">{p.provider_name}</div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-slate-900 font-bold">{p.provider_name}</div>
+                      <div className="text-[10px] text-slate-500">
                         {p.details?.note || p.threat_type || 'Observed at: ' + p.observation_time.slice(0, 19)}
                       </div>
                     </div>
                     <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${
-                      p.is_malicious ? 'bg-red-950 text-red-400 border border-red-800' :
-                      p.status === 'AVAILABLE' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
-                      'bg-slate-800 text-slate-400 border border-slate-700'
+                      p.is_malicious ? 'bg-red-100 text-red-700 border border-red-300' :
+                      p.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                      'bg-slate-200 text-slate-700 border border-slate-300'
                     }`}>
                       {p.is_malicious ? 'THREAT MATCH' : p.status}
                     </span>
@@ -330,12 +325,12 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({ currentScan,
         </div>
       ) : (
         /* Empty State */
-        <div className="bg-[#0d1526]/50 border border-slate-800 border-dashed rounded-2xl p-12 text-center">
+        <div className="bg-white border-2 border-slate-200 border-dashed rounded-2xl p-12 text-center shadow-sm">
           <Terminal className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+          <h3 className="text-sm font-mono font-bold text-slate-900 uppercase tracking-wider">
             No Active Threat Investigation
           </h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+          <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
             Submit a target URL or select one of the benchmark preset links above to run multi-layered forensic analysis.
           </p>
         </div>

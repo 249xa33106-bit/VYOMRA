@@ -5,11 +5,8 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   ArrowUpRight, 
-  Server, 
-  Radar, 
   Layers,
-  TrendingUp,
-  Cpu
+  TrendingUp
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { DashboardStats, ScanSummary } from '../types';
@@ -48,7 +45,7 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
 
   if (loading || !stats) {
     return (
-      <div className="p-8 text-center text-slate-400 font-mono text-xs">
+      <div className="p-8 text-center text-slate-500 font-mono text-xs">
         Loading Command Center telemetry...
       </div>
     );
@@ -69,18 +66,18 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Welcome Banner */}
-      <div className="bg-[#0a1220] border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div>
-          <h1 className="text-xl font-black text-white font-mono uppercase tracking-wide flex items-center space-x-2">
+          <h1 className="text-xl font-black text-slate-900 font-mono uppercase tracking-wide flex items-center space-x-2">
             <span>Threat Intelligence Command Center</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Real-time telemetry, multi-layer heuristics, and autonomous investigative telemetry
           </p>
         </div>
         <button
           onClick={onNavigateInvestigate}
-          className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-cyan-500/20 flex items-center space-x-2 self-start md:self-auto"
+          className="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-cyan-600/20 flex items-center space-x-2 self-start md:self-auto"
         >
           <span>Launch Investigation</span>
           <ArrowUpRight className="w-4 h-4" />
@@ -89,39 +86,39 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
 
       {/* Top 4 KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono mb-2">
             <span>TOTAL SCANS</span>
-            <Activity className="w-4 h-4 text-cyan-400" />
+            <Activity className="w-4 h-4 text-cyan-600" />
           </div>
-          <div className="text-2xl font-black font-mono text-white">{stats.total_scans}</div>
+          <div className="text-2xl font-black font-mono text-slate-900">{stats.total_scans}</div>
           <div className="text-[10px] text-slate-400 mt-1">Recorded in Evidence Vault</div>
         </div>
 
-        <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono mb-2">
             <span>HIGH RISK & MALICIOUS</span>
-            <ShieldAlert className="w-4 h-4 text-red-400" />
+            <ShieldAlert className="w-4 h-4 text-red-600" />
           </div>
-          <div className="text-2xl font-black font-mono text-red-400">{stats.high_risk_scans}</div>
+          <div className="text-2xl font-black font-mono text-red-600">{stats.high_risk_scans}</div>
           <div className="text-[10px] text-slate-400 mt-1">Risk score &gt;= 65/100</div>
         </div>
 
-        <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono mb-2">
             <span>SUSPICIOUS ASSETS</span>
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl font-black font-mono text-amber-400">{stats.suspicious_scans}</div>
+          <div className="text-2xl font-black font-mono text-amber-600">{stats.suspicious_scans}</div>
           <div className="text-[10px] text-slate-400 mt-1">Elevated heuristic markers</div>
         </div>
 
-        <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono mb-2">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono mb-2">
             <span>BENIGN ASSETS</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-black font-mono text-emerald-400">{stats.benign_scans}</div>
+          <div className="text-2xl font-black font-mono text-emerald-600">{stats.benign_scans}</div>
           <div className="text-[10px] text-slate-400 mt-1">Within standard baseline</div>
         </div>
       </div>
@@ -129,13 +126,13 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
       {/* Visual Analytics Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Trend Area Chart */}
-        <div className="lg:col-span-8 bg-[#0d1526] border border-slate-800 rounded-xl p-5">
+        <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider flex items-center space-x-2">
-              <TrendingUp className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+              <TrendingUp className="w-4 h-4 text-cyan-600" />
               <span>Investigation Activity Trends</span>
             </h2>
-            <span className="text-[10px] font-mono text-slate-400">7-DAY HISTORICAL</span>
+            <span className="text-[10px] font-mono text-slate-500 font-semibold">7-DAY HISTORICAL</span>
           </div>
 
           <div className="h-60 w-full">
@@ -143,27 +140,27 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
               <AreaChart data={stats.trends.length ? stats.trends : [{ date: 'Today', scans: stats.total_scans }]}>
                 <defs>
                   <linearGradient id="cyanGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#0891b2" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#0891b2" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
-                <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
+                <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickLine={false} />
+                <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0a1220', borderColor: '#1e293b', fontSize: 11, fontFamily: 'monospace' }} 
-                  labelStyle={{ color: '#06b6d4' }}
+                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: 8, fontSize: 11, fontFamily: 'monospace', color: '#0f172a', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} 
+                  labelStyle={{ color: '#0891b2', fontWeight: 'bold' }}
                 />
-                <Area type="monotone" dataKey="scans" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#cyanGradient)" />
+                <Area type="monotone" dataKey="scans" stroke="#0891b2" strokeWidth={2} fillOpacity={1} fill="url(#cyanGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Categories Distribution */}
-        <div className="lg:col-span-4 bg-[#0d1526] border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-sm">
           <div>
-            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider mb-2 flex items-center space-x-2">
-              <Layers className="w-4 h-4 text-violet-400" />
+            <h2 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center space-x-2">
+              <Layers className="w-4 h-4 text-violet-600" />
               <span>Threat Category Ratio</span>
             </h2>
             <div className="h-44 w-full flex items-center justify-center">
@@ -172,10 +169,10 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
                   <PieChart>
                     <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={35}>
                       {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#64748b'} />
+                        <Cell key={`cell-${index}`} fill={COLORS[entry.name] || '#94a3b8'} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#0a1220', borderColor: '#1e293b', fontSize: 11 }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: 8, fontSize: 11, color: '#0f172a' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -184,12 +181,12 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono pt-3 border-t border-slate-800">
+          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono pt-3 border-t border-slate-100">
             {categoryData.map(c => (
               <div key={c.name} className="flex items-center space-x-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[c.name] || '#64748b' }}></span>
-                <span className="text-slate-400">{c.name}:</span>
-                <span className="text-white font-bold">{c.value}</span>
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[c.name] || '#94a3b8' }}></span>
+                <span className="text-slate-500">{c.name}:</span>
+                <span className="text-slate-900 font-bold">{c.value}</span>
               </div>
             ))}
           </div>
@@ -201,13 +198,13 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
         {healthData?.providers && Object.entries(healthData.providers).map(([pName, pStatus]: [string, any]) => {
           const isConfigured = String(pStatus).includes('CONFIGURED') || String(pStatus).includes('ACTIVE');
           return (
-            <div key={pName} className="p-3.5 bg-[#0d1526] border border-slate-800 rounded-xl text-xs font-mono">
-              <div className="text-[10px] text-slate-400 uppercase mb-1">
+            <div key={pName} className="p-3.5 bg-white border border-slate-200 rounded-xl text-xs font-mono shadow-sm">
+              <div className="text-[10px] text-slate-500 uppercase mb-1">
                 {pName.replace(/_/g, ' ')}
               </div>
               <div className="flex items-center space-x-2">
-                <span className={`w-2 h-2 rounded-full ${isConfigured ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
-                <span className={`font-bold ${isConfigured ? 'text-emerald-300' : 'text-amber-300'}`}>
+                <span className={`w-2 h-2 rounded-full ${isConfigured ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                <span className={`font-bold ${isConfigured ? 'text-emerald-700' : 'text-amber-700'}`}>
                   {pStatus}
                 </span>
               </div>
@@ -217,12 +214,12 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
       </div>
 
       {/* Recent Investigations Table */}
-      <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+          <h2 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
             Recent Forensic Investigations
           </h2>
-          <span className="text-xs text-cyan-400 font-mono cursor-pointer hover:underline" onClick={onNavigateInvestigate}>
+          <span className="text-xs text-cyan-700 font-mono cursor-pointer hover:underline font-semibold" onClick={onNavigateInvestigate}>
             View All Scans &rarr;
           </span>
         </div>
@@ -230,7 +227,7 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 text-[10px] uppercase">
+              <tr className="border-b border-slate-200 text-slate-500 text-[10px] uppercase">
                 <th className="pb-2">Scan ID</th>
                 <th className="pb-2">Target Host / URL</th>
                 <th className="pb-2">Risk Score</th>
@@ -238,25 +235,25 @@ export const Overview: React.FC<OverviewProps> = ({ onSelectScan, onNavigateInve
                 <th className="pb-2 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100">
               {recentScans.map((s) => (
-                <tr key={s.scan_id} className="hover:bg-slate-900/40 transition-colors">
-                  <td className="py-2.5 text-cyan-400 font-bold">{s.scan_id}</td>
-                  <td className="py-2.5 text-slate-200 truncate max-w-md">{s.normalized_url}</td>
+                <tr key={s.scan_id} className="hover:bg-slate-50 transition-colors">
+                  <td className="py-2.5 text-cyan-700 font-bold">{s.scan_id}</td>
+                  <td className="py-2.5 text-slate-800 truncate max-w-md">{s.normalized_url}</td>
                   <td className="py-2.5 font-bold">
-                    <span className={s.risk_score >= 65 ? 'text-red-400' : s.risk_score >= 30 ? 'text-amber-400' : 'text-emerald-400'}>
+                    <span className={s.risk_score >= 65 ? 'text-red-600' : s.risk_score >= 30 ? 'text-amber-600' : 'text-emerald-600'}>
                       {s.risk_score}/100
                     </span>
                   </td>
                   <td className="py-2.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded border border-slate-800 bg-slate-900 text-slate-300">
+                    <span className="text-[10px] px-2 py-0.5 rounded border border-slate-200 bg-slate-50 text-slate-700">
                       {s.risk_category}
                     </span>
                   </td>
                   <td className="py-2.5 text-right">
                     <button
                       onClick={() => onSelectScan(s.scan_id)}
-                      className="text-cyan-400 hover:text-cyan-300 hover:underline text-[11px]"
+                      className="text-cyan-700 hover:text-cyan-800 hover:underline text-[11px] font-bold"
                     >
                       Inspect &rarr;
                     </button>

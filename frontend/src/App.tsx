@@ -126,7 +126,7 @@ export function App() {
   const { title, subtitle } = getPageTitle();
 
   return (
-    <div className="flex h-screen bg-[#050b14] text-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans">
       {/* Persistent Navigation Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -145,7 +145,7 @@ export function App() {
           onSignOut={handleSignOut}
         />
 
-        <main className="flex-1 overflow-y-auto bg-[#070d17]/50">
+        <main className="flex-1 overflow-y-auto bg-slate-100/60">
           {currentTab === 'overview' && (
             <Overview
               onSelectScan={handleSelectScan}

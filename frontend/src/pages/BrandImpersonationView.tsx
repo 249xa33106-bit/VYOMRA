@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldAlert, CheckCircle, AlertTriangle, Search, Info, ExternalLink } from 'lucide-react';
+import { ShieldAlert, CheckCircle, AlertTriangle } from 'lucide-react';
 import { api } from '../services/api';
 import { ScanResponse } from '../types';
 
@@ -8,7 +8,7 @@ interface BrandImpersonationViewProps {
   onScanUrl: (url: string) => void;
 }
 
-export const BrandImpersonationView: React.FC<BrandImpersonationViewProps> = ({ currentScan, onScanUrl }) => {
+export const BrandImpersonationView: React.FC<BrandImpersonationViewProps> = ({ currentScan }) => {
   const [brands, setBrands] = useState<Array<{ brand: string; canonical_domain: string; monitored_keywords: string[] }>>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -24,70 +24,70 @@ export const BrandImpersonationView: React.FC<BrandImpersonationViewProps> = ({ 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-lg font-black text-white font-mono uppercase flex items-center space-x-2">
-          <ShieldAlert className="w-5 h-5 text-cyan-400" />
+        <h1 className="text-lg font-black text-slate-900 font-mono uppercase flex items-center space-x-2">
+          <ShieldAlert className="w-5 h-5 text-cyan-600" />
           <span>Brand Impersonation & Typosquatting Radar</span>
         </h1>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-500">
           Algorithmic detection of homoglyphs, leetspeak character substitutions, and deceptive domain squatting
         </p>
       </div>
 
       {/* Active Scan Brand Impersonation Card */}
       {currentScan?.brand_match ? (
-        <div className="bg-red-950/30 border border-red-500/50 rounded-xl p-5 shadow-lg">
+        <div className="bg-red-50 border border-red-300 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-mono font-bold text-red-400 uppercase tracking-wider flex items-center space-x-2">
-              <AlertTriangle className="w-4 h-4 text-red-400" />
+            <span className="text-xs font-mono font-bold text-red-700 uppercase tracking-wider flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
               <span>ACTIVE IMPERSONATION DETECTED ON TARGET</span>
             </span>
-            <span className="text-[10px] font-mono bg-red-900/60 text-red-200 px-2.5 py-0.5 rounded font-bold">
+            <span className="text-[10px] font-mono bg-red-100 text-red-800 px-2.5 py-0.5 rounded font-bold">
               CONFIDENCE: {currentScan.brand_match.confidence}
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono mb-4">
-            <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-              <span className="text-slate-400 text-[10px] uppercase">Target Brand:</span>
-              <div className="text-base font-bold text-white mt-0.5">{currentScan.brand_match.brand_name}</div>
+            <div className="bg-white p-3 rounded-lg border border-red-200">
+              <span className="text-slate-500 text-[10px] uppercase">Target Brand:</span>
+              <div className="text-base font-bold text-slate-900 mt-0.5">{currentScan.brand_match.brand_name}</div>
             </div>
 
-            <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-              <span className="text-slate-400 text-[10px] uppercase">Legitimate Domain:</span>
-              <div className="text-base font-bold text-emerald-400 mt-0.5">{currentScan.brand_match.legitimate_domain}</div>
+            <div className="bg-white p-3 rounded-lg border border-red-200">
+              <span className="text-slate-500 text-[10px] uppercase">Legitimate Domain:</span>
+              <div className="text-base font-bold text-emerald-700 mt-0.5">{currentScan.brand_match.legitimate_domain}</div>
             </div>
 
-            <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-              <span className="text-slate-400 text-[10px] uppercase">Actual Registrable Domain:</span>
-              <div className="text-base font-bold text-red-400 mt-0.5">{currentScan.brand_match.actual_domain}</div>
+            <div className="bg-white p-3 rounded-lg border border-red-200">
+              <span className="text-slate-500 text-[10px] uppercase">Actual Registrable Domain:</span>
+              <div className="text-base font-bold text-red-600 mt-0.5">{currentScan.brand_match.actual_domain}</div>
             </div>
           </div>
 
-          <div className="space-y-2 text-xs font-mono bg-slate-950/70 p-3 rounded-lg border border-slate-800">
+          <div className="space-y-2 text-xs font-mono bg-white p-3 rounded-lg border border-red-200">
             <div>
-              <span className="text-slate-400">Similarity Metric: </span>
-              <span className="text-cyan-400 font-bold">{Math.round(currentScan.brand_match.similarity_score * 100)}% Match</span>
+              <span className="text-slate-500">Similarity Metric: </span>
+              <span className="text-cyan-700 font-bold">{Math.round(currentScan.brand_match.similarity_score * 100)}% Match</span>
             </div>
             <div>
-              <span className="text-slate-400">Substitution Technique: </span>
-              <span className="text-white">{currentScan.brand_match.substitution_technique || 'None recorded'}</span>
+              <span className="text-slate-500">Substitution Technique: </span>
+              <span className="text-slate-900 font-semibold">{currentScan.brand_match.substitution_technique || 'None recorded'}</span>
             </div>
             <div>
-              <span className="text-slate-400">Forensic Evidence: </span>
-              <span className="text-slate-300">{currentScan.brand_match.evidence}</span>
+              <span className="text-slate-500">Forensic Evidence: </span>
+              <span className="text-slate-800">{currentScan.brand_match.evidence}</span>
             </div>
-            <div className="pt-2 text-[11px] text-slate-400 border-t border-slate-800">
-              <span className="font-semibold text-slate-300">Methodological Limitation: </span>
+            <div className="pt-2 text-[11px] text-slate-500 border-t border-slate-100">
+              <span className="font-semibold text-slate-700">Methodological Limitation: </span>
               {currentScan.brand_match.limitations}
             </div>
           </div>
         </div>
       ) : currentScan ? (
-        <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-5 flex items-center space-x-3">
-          <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 flex items-center space-x-3 shadow-sm">
+          <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
           <div className="text-xs font-mono">
-            <span className="text-emerald-400 font-bold">No High-Confidence Brand Impersonation Detected: </span>
-            <span className="text-slate-300">
+            <span className="text-emerald-800 font-bold">No High-Confidence Brand Impersonation Detected: </span>
+            <span className="text-slate-700">
               Target domain '{currentScan.url_components.registrable_domain}' does not exhibit homoglyphs or keywords matching monitored high-value brands.
             </span>
           </div>
@@ -95,13 +95,13 @@ export const BrandImpersonationView: React.FC<BrandImpersonationViewProps> = ({ 
       ) : null}
 
       {/* Monitored Brand Catalog */}
-      <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+            <h2 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
               Monitored Enterprise Brands ({brands.length} Tier-1 Targets)
             </h2>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500">
               Continuously guarded against character swaps, punycode lookalikes, and subdomain spoofing
             </p>
           </div>
@@ -112,23 +112,23 @@ export const BrandImpersonationView: React.FC<BrandImpersonationViewProps> = ({ 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search brands..."
-              className="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
+              className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-600"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredBrands.map((b) => (
-            <div key={b.brand} className="p-3 bg-slate-900/60 rounded-lg border border-slate-800 text-xs font-mono space-y-1.5">
+            <div key={b.brand} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-white">{b.brand}</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+                <span className="text-sm font-bold text-slate-900">{b.brand}</span>
+                <span className="text-[10px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 font-semibold">
                   {b.canonical_domain}
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400">
+              <div className="text-[10px] text-slate-500">
                 <span>Guard Keywords: </span>
-                <span className="text-slate-300">{b.monitored_keywords.slice(0, 4).join(', ')}...</span>
+                <span className="text-slate-700">{b.monitored_keywords.slice(0, 4).join(', ')}...</span>
               </div>
             </div>
           ))}

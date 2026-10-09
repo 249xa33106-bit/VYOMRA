@@ -44,25 +44,25 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onSelectScan }
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg font-black text-white font-mono uppercase flex items-center space-x-2">
-            <History className="w-5 h-5 text-cyan-400" />
+          <h1 className="text-lg font-black text-slate-900 font-mono uppercase flex items-center space-x-2">
+            <History className="w-5 h-5 text-cyan-600" />
             <span>Digital Evidence Vault — Scan History</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Cryptographically hashed historical records stored locally with data minimization controls
           </p>
         </div>
 
         <button
           onClick={loadScans}
-          className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors self-start sm:self-auto"
+          className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-slate-900 shadow-sm transition-colors self-start sm:self-auto"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-[#0d1526] border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row gap-3">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-3 shadow-sm">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
           <input
@@ -71,7 +71,7 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onSelectScan }
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && loadScans()}
             placeholder="Search by URL or domain keyword..."
-            className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-cyan-600"
           />
         </div>
 
@@ -82,8 +82,8 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onSelectScan }
               onClick={() => setCategoryFilter(cat)}
               className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold transition-colors ${
                 categoryFilter === cat
-                  ? 'bg-cyan-500 text-slate-950'
-                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                  ? 'bg-cyan-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200'
               }`}
             >
               {cat}
@@ -93,11 +93,11 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onSelectScan }
       </div>
 
       {/* Table */}
-      <div className="bg-[#0d1526] border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="border-b border-slate-800 bg-[#0a1220] text-slate-400 text-[10px] uppercase">
+              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 text-[10px] uppercase">
                 <th className="p-3.5">Scan ID</th>
                 <th className="p-3.5">Normalized Target</th>
                 <th className="p-3.5">Risk Score</th>
@@ -107,16 +107,16 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onSelectScan }
                 <th className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-8 text-center text-slate-500">
                     Loading historical scan records...
                   </td>
                 </tr>
               ) : scans.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-8 text-center text-slate-500">
                     No scan records found.
                   </td>
                 </tr>
@@ -125,31 +125,31 @@ export const ScanHistoryView: React.FC<ScanHistoryViewProps> = ({ onSelectScan }
                   <tr 
                     key={s.scan_id} 
                     onClick={() => onSelectScan(s.scan_id)}
-                    className="hover:bg-slate-900/60 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50 transition-colors cursor-pointer"
                   >
-                    <td className="p-3.5 text-cyan-400 font-bold">{s.scan_id}</td>
-                    <td className="p-3.5 text-slate-200 truncate max-w-xs">{s.normalized_url}</td>
+                    <td className="p-3.5 text-cyan-700 font-bold">{s.scan_id}</td>
+                    <td className="p-3.5 text-slate-800 truncate max-w-xs">{s.normalized_url}</td>
                     <td className="p-3.5 font-bold">
                       <span className={
-                        s.risk_score >= 65 ? 'text-red-400' :
-                        s.risk_score >= 30 ? 'text-amber-400' : 'text-emerald-400'
+                        s.risk_score >= 65 ? 'text-red-600' :
+                        s.risk_score >= 30 ? 'text-amber-600' : 'text-emerald-600'
                       }>
                         {s.risk_score}/100
                       </span>
                     </td>
                     <td className="p-3.5">
-                      <span className="text-[10px] px-2 py-0.5 rounded border border-slate-800 bg-slate-900 text-slate-300">
+                      <span className="text-[10px] px-2 py-0.5 rounded border border-slate-200 bg-slate-100 text-slate-700 font-semibold">
                         {s.risk_category}
                       </span>
                     </td>
-                    <td className="p-3.5 text-slate-400">{s.findings_count} signals</td>
+                    <td className="p-3.5 text-slate-600">{s.findings_count} signals</td>
                     <td className="p-3.5 text-slate-400 text-[10px] truncate max-w-[140px]">
                       {s.report_hash}
                     </td>
                     <td className="p-3.5 text-right space-x-2">
                       <button
                         onClick={(e) => handleDelete(e, s.scan_id)}
-                        className="text-slate-400 hover:text-red-400 p-1 transition-colors"
+                        className="text-slate-400 hover:text-red-600 p-1 transition-colors"
                         title="Delete scan (Data Minimization)"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
