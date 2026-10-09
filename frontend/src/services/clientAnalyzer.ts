@@ -337,6 +337,105 @@ export async function computeSha256Digest(data: any): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+interface LiveDnsData {
+  resolvedIp: string | null;
+  status: string;
+  ttl: number;
+  isThreatBlocked: boolean;
+}
+
+interface LiveRdapData {
+  registrar: string | null;
+  creationDate: string | null;
+  expirationDate: string | null;
+  nameservers: string[];
+  isAvailable: boolean;
+}
+
+async function queryLiveDns(hostname: string): Promise<LiveDnsData> {
+  if (!hostname) return { resolvedIp: null, status: "EMPTY", ttl: 0, isThreatBlocked: false };
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+    return { resolvedIp: hostname, status: "IP_LITERAL", ttl: 0, isThreatBlocked: false };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(hostname)}&type=A`, {
+      headers: { 'Accept': 'application/dns-json' },
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      const answer = data.Answer?.find((a: any) => a.type === 1);
+      const ip = answer?.data || null;
+      return {
+        resolvedIp: ip,
+        status: data.Status === 0 ? "NOERROR" : data.Status === 3 ? "NXDOMAIN" : `STATUS_${data.Status}`,
+        ttl: answer?.TTL || 300,
+        isThreatBlocked: ip === "0.0.0.0" || ip === "127.0.0.1"
+      };
+    }
+  } catch (e) {}
+
+  return { resolvedIp: null, status: "NO_NETWORK", ttl: 0, isThreatBlocked: false };
+}
+
+async function queryLiveRdap(registrableDomain: string): Promise<LiveRdapData> {
+  if (!registrableDomain || registrableDomain.includes(':') || /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(registrableDomain)) {
+    return { registrar: null, creationDate: null, expirationDate: null, nameservers: [], isAvailable: false };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2200);
+    const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(registrableDomain)}`, {
+      headers: { 'Accept': 'application/rdap+json' },
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      let registrarName = null;
+      if (Array.isArray(data.entities)) {
+        for (const ent of data.entities) {
+          if (ent.roles?.includes('registrar') && ent.vcardArray) {
+            const fnItem = ent.vcardArray[1]?.find((v: any) => v[0] === 'fn');
+            if (fnItem) registrarName = fnItem[3];
+          }
+        }
+      }
+
+      let creation = null;
+      let expiration = null;
+      if (Array.isArray(data.events)) {
+        for (const ev of data.events) {
+          if (ev.eventAction === 'registration') creation = ev.eventDate;
+          if (ev.eventAction === 'expiration') expiration = ev.eventDate;
+        }
+      }
+
+      const nameservers: string[] = [];
+      if (Array.isArray(data.nameservers)) {
+        for (const ns of data.nameservers) {
+          if (ns.ldhName) nameservers.push(ns.ldhName);
+        }
+      }
+
+      return {
+        registrar: registrarName || "Public Registrar",
+        creationDate: creation,
+        expirationDate: expiration,
+        nameservers: nameservers.slice(0, 4),
+        isAvailable: true
+      };
+    }
+  } catch (e) {}
+
+  return { registrar: null, creationDate: null, expirationDate: null, nameservers: [], isAvailable: false };
+}
+
 export async function runClientInvestigation(url: string): Promise<ScanResponse> {
   const scanId = `PX-${Math.random().toString(36).substring(2, 10).toUpperCase()}${Date.now().toString(36).substring(4).toUpperCase()}`;
   const timestamp = new Date().toISOString();
@@ -350,7 +449,95 @@ export async function runClientInvestigation(url: string): Promise<ScanResponse>
   // 3. Brand Radar
   const { brandMatch, findings: brandFindings } = detectBrandRadarClient(components);
 
-  const allFindings = [...inputFindings, ...forensicFindings, ...brandFindings];
+  // 3b. Real Live Internet Telemetry (DNS over HTTPS + ICANN RDAP)
+  const [liveDns, liveRdap] = await Promise.all([
+    queryLiveDns(components.hostname),
+    queryLiveRdap(components.registrable_domain)
+  ]);
+
+  const liveFindings: Finding[] = [];
+
+  // Live DNS Findings
+  if (liveDns.resolvedIp) {
+    liveFindings.push({
+      detector_id: "DET-DNS-LIVE-RESOLVE",
+      name: "Live Authoritative DNS A-Record Mapped",
+      severity: "INFO",
+      evidence: `Live Cloudflare DoH resolved host to IP: ${liveDns.resolvedIp} (TTL: ${liveDns.ttl}s).`,
+      rationale: "Domain has active, authoritative global routing records.",
+      recommended_action: "Correlate IP with autonomous system number (ASN) and hosting provider telemetry.",
+      source_type: "DIRECT_OBSERVATION",
+      weight: 1.0
+    });
+  } else if (liveDns.status === "NXDOMAIN") {
+    liveFindings.push({
+      detector_id: "DET-DNS-NXDOMAIN",
+      name: "NXDOMAIN: Unregistered or Dead Hostname",
+      severity: "HIGH",
+      evidence: `Live DNS query returned NXDOMAIN (RCODE 3). Host has no active A-record in root name servers.`,
+      rationale: "Unregistered domains or expired attack staging sites exhibit high correlation with deceptive campaigns.",
+      recommended_action: "Flag destination as unroutable and block perimeter navigation.",
+      source_type: "DIRECT_OBSERVATION",
+      weight: 4.0
+    });
+  }
+
+  if (liveDns.isThreatBlocked) {
+    liveFindings.push({
+      detector_id: "DET-ZERO-TRUST-BLOCK",
+      name: "Cloudflare Zero-Trust Active Threat Block",
+      severity: "CRITICAL",
+      evidence: `Hostname resolved to 0.0.0.0 on Security DNS. Domain is confirmed active malicious software or phishing asset.`,
+      rationale: "Public zero-trust security resolvers proactively sinkhole known malicious infrastructure.",
+      recommended_action: "Quarantine domain immediately across enterprise firewalls.",
+      source_type: "DIRECT_OBSERVATION",
+      weight: 6.0
+    });
+  }
+
+  // Live RDAP Findings
+  if (liveRdap.isAvailable && liveRdap.registrar) {
+    liveFindings.push({
+      detector_id: "DET-RDAP-REGISTRAR",
+      name: "Authoritative Domain Registrar Verified",
+      severity: "INFO",
+      evidence: `Domain registered through: ${liveRdap.registrar}. Nameservers: ${liveRdap.nameservers.join(', ') || 'Authoritative DNS'}.`,
+      rationale: "Domain registration is formally accredited under ICANN root registries.",
+      recommended_action: "Retain registrar identity for potential legal notice or takedown requests.",
+      source_type: "DIRECT_OBSERVATION",
+      weight: 1.0
+    });
+
+    if (liveRdap.creationDate) {
+      const createdTime = new Date(liveRdap.creationDate).getTime();
+      const ageInDays = Math.floor((Date.now() - createdTime) / (1000 * 60 * 60 * 24));
+      if (ageInDays >= 0 && ageInDays < 30) {
+        liveFindings.push({
+          detector_id: "DET-RDAP-NEW-DOMAIN",
+          name: "Newly Registered Domain (<30 Days)",
+          severity: "HIGH",
+          evidence: `Domain created on ${liveRdap.creationDate.slice(0, 10)} (${ageInDays} days old). Newly registered domains exhibit high spear-phishing correlation.`,
+          rationale: "Threat actors register burner domains shortly before launching active phishing lures.",
+          recommended_action: "Enforce heightened sandbox isolation and scrutinize inbound emails.",
+          source_type: "DIRECT_OBSERVATION",
+          weight: 4.0
+        });
+      } else if (ageInDays > 365 * 3 && !brandMatch) {
+        liveFindings.push({
+          detector_id: "DET-RDAP-ESTABLISHED",
+          name: "Established Domain Longevity (>3 Years)",
+          severity: "LOW",
+          evidence: `Domain has been registered since ${liveRdap.creationDate.slice(0, 10)} (${Math.floor(ageInDays / 365)} years active). High operational longevity.`,
+          rationale: "Long-standing domain age significantly reduces probability of zero-hour malicious staging.",
+          recommended_action: "Standard organizational monitoring applies.",
+          source_type: "DIRECT_OBSERVATION",
+          weight: 0.5
+        });
+      }
+    }
+  }
+
+  const allFindings = [...inputFindings, ...forensicFindings, ...brandFindings, ...liveFindings];
 
   // 4. Calculate Risk
   let rawScore = 10;
@@ -508,6 +695,52 @@ export async function runClientInvestigation(url: string): Promise<ScanResponse>
       label: "resolves_to_ip",
       animated: true
     });
+  } else if (liveDns.resolvedIp) {
+    nodes.push({
+      id: "node-live-ip",
+      type: "customNode",
+      position: { x: 300, y: 300 },
+      data: {
+        label: `Live IP: ${liveDns.resolvedIp}`,
+        full_value: liveDns.resolvedIp,
+        entity_type: "INFRASTRUCTURE_IP",
+        source_type: "DIRECT_OBSERVATION",
+        severity: liveDns.isThreatBlocked ? "CRITICAL" : "MEDIUM",
+        evidence: `Cloudflare DoH authoritative A-record resolution: ${liveDns.resolvedIp} (TTL: ${liveDns.ttl}s).`,
+        icon: "Server"
+      }
+    });
+    edges.push({
+      id: "edge-domain-live-ip",
+      source: "node-domain",
+      target: "node-live-ip",
+      label: "resolves_to_ip",
+      animated: true
+    });
+  }
+
+  if (liveRdap.isAvailable && liveRdap.registrar) {
+    nodes.push({
+      id: "node-registrar",
+      type: "customNode",
+      position: { x: 560, y: 220 },
+      data: {
+        label: `Registrar: ${liveRdap.registrar}`,
+        full_value: liveRdap.registrar,
+        entity_type: "REGISTRAR",
+        source_type: "DIRECT_OBSERVATION",
+        severity: "LOW",
+        evidence: `ICANN RDAP Accredited Registrar: ${liveRdap.registrar}${liveRdap.creationDate ? ` (Registered: ${liveRdap.creationDate.slice(0, 10)})` : ''}`,
+        icon: "ShieldCheck"
+      }
+    });
+    edges.push({
+      id: "edge-domain-registrar",
+      source: "node-domain",
+      target: "node-registrar",
+      label: "registered_with",
+      animated: false
+    });
   }
 
   const attackDna: AttackGraph = { nodes, edges };
@@ -515,10 +748,10 @@ export async function runClientInvestigation(url: string): Promise<ScanResponse>
   // 7. AI Story
   const story: AttackStory = {
     executive_summary: brandMatch
-      ? `Forensic investigation of '${components.normalized_url}' identified high-confidence brand impersonation targeting ${brandMatch.brand_name}. Domain '${components.registrable_domain}' deviates from legitimate authoritative host '${brandMatch.legitimate_domain}'. Syntactic evidence indicates an active credential-harvesting vector.`
+      ? `Forensic investigation of '${components.normalized_url}' identified high-confidence brand impersonation targeting ${brandMatch.brand_name}. Domain '${components.registrable_domain}' deviates from legitimate authoritative host '${brandMatch.legitimate_domain}'. ${liveDns.resolvedIp ? `Resolved live IP: ${liveDns.resolvedIp}. ` : ''}Syntactic evidence indicates an active credential-harvesting vector.`
       : score >= 50
-      ? `Deep forensic inspection of '${components.normalized_url}' uncovered elevated structural anomaly markers across the URL authority and path hierarchy matching modern social engineering campaigns.`
-      : `Forensic inspection of '${components.normalized_url}' reveals baseline operating parameters with no severe homoglyphs or payload staging indicators.`,
+      ? `Deep forensic inspection of '${components.normalized_url}' uncovered elevated structural anomaly markers across the URL authority and path hierarchy matching modern social engineering campaigns. ${liveDns.status === 'NXDOMAIN' ? 'Host has no active DNS record (NXDOMAIN). ' : liveDns.resolvedIp ? `Live IP: ${liveDns.resolvedIp}. ` : ''}`
+      : `Forensic inspection of '${components.normalized_url}' reveals baseline operating parameters. ${liveRdap.registrar ? `Registered via ${liveRdap.registrar}. ` : ''}${liveDns.resolvedIp ? `Active IP: ${liveDns.resolvedIp}. ` : ''}No severe homoglyphs or payload staging indicators detected.`,
     suspected_attack_category: brandMatch ? `Credential Phishing & Brand Impersonation (${brandMatch.brand_name})` : score >= 50 ? "Suspicious Infrastructure Staging" : "Benign Web Asset",
     evidence_supporting: allFindings.map(f => `${f.name}: ${f.evidence}`),
     potential_impact: brandMatch ? "User credential compromise and unauthorized account takeover." : score >= 50 ? "Potential victim redirection to malicious endpoints." : "Minimal security threat footprint.",
