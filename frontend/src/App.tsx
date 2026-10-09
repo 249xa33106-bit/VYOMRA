@@ -113,12 +113,24 @@ export function App() {
     }
   };
 
+  const handleScanFromLanding = async (url: string) => {
+    handleExploreGuest();
+    try {
+      const scan = await api.createScan(url);
+      setCurrentScan(scan);
+      setCurrentTab('investigate');
+    } catch (e) {
+      console.error('Scan error from landing:', e);
+    }
+  };
+
   // If in landing page view mode, display the full Public Landing Page
   if (viewMode === 'landing') {
     return (
       <LandingPage
         onLogin={handleLogin}
         onExploreGuest={handleExploreGuest}
+        onScanUrl={handleScanFromLanding}
       />
     );
   }
