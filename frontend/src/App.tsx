@@ -10,6 +10,7 @@ import { ThreatIntelView } from './pages/ThreatIntelView';
 import { ScanHistoryView } from './pages/ScanHistoryView';
 import { WhatIfSimulatorView } from './pages/WhatIfSimulatorView';
 import { ReportsView } from './pages/ReportsView';
+import { FeedbackView } from './pages/FeedbackView';
 import { SettingsView } from './pages/SettingsView';
 import { ScanResponse, SampleUrl, UserSession } from './types';
 import { api } from './services/api';
@@ -97,9 +98,11 @@ export function App() {
       case 'simulator':
         return { title: 'What-If Defense Simulator', subtitle: 'Hypothetical risk scenario sandbox' };
       case 'reports':
-        return { title: 'Forensic Reports & Verification', subtitle: 'Serialized dossiers and hash integrity' };
+        return { title: 'Forensic Reports & Verification' };
+      case 'feedback':
+        return { title: 'User Feedback & QA Portal' };
       case 'settings':
-        return { title: 'Settings & Security Controls', subtitle: 'Architecture and isolation policies' };
+        return { title: 'Settings & Security Controls' };
       default:
         return { title: 'PHANTOM X', subtitle: 'Autonomous Cyber Defense' };
     }
@@ -193,6 +196,10 @@ export function App() {
 
           {currentTab === 'reports' && (
             <ReportsView currentScan={currentScan} />
+          )}
+
+          {currentTab === 'feedback' && (
+            <FeedbackView userSession={userSession} currentScan={currentScan} />
           )}
 
           {currentTab === 'settings' && (

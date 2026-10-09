@@ -9,6 +9,7 @@ import {
   Sliders, 
   FileText, 
   Settings as SettingsIcon,
+  MessageSquareHeart,
   Home,
   Terminal
 } from 'lucide-react';
@@ -35,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'history', label: 'Scan History', icon: History },
     { id: 'simulator', label: 'What-If Simulator', icon: Sliders, badge: 'SANDBOX' },
     { id: 'reports', label: 'Reports & Vault', icon: FileText },
+    { id: 'feedback', label: 'User Feedback', icon: MessageSquareHeart, badge: 'NEW' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
 
