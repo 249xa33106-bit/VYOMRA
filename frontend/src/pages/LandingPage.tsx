@@ -46,7 +46,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         email: user.email || (role === 'AUTHORITY' ? 'admin@phantomx.defense.gov' : 'user@phantomx.soc'),
         displayName: user.displayName || (role === 'AUTHORITY' ? 'Admin Authority' : 'User Analyst'),
         role: role,
-        clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (ADMIN COMMAND)' : 'LEVEL-3 BRAVO (SOC USER)',
+        clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (ADMIN COMMAND)' : 'LEVEL-3 BRAVO (SOC ANALYST)',
         badgeId: `${role === 'AUTHORITY' ? 'ADM' : 'USR'}-GGL-${Math.floor(1000 + Math.random() * 9000)}`,
         authenticatedAt: new Date().toISOString()
       };
@@ -58,7 +58,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         email: role === 'AUTHORITY' ? 'admin@phantomx.defense.gov' : 'user@phantomx.soc',
         displayName: role === 'AUTHORITY' ? 'Admin Authority (Google)' : 'User Analyst (Google)',
         role: role,
-        clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (ADMIN COMMAND)' : 'LEVEL-3 BRAVO (SOC USER)',
+        clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (ADMIN COMMAND)' : 'LEVEL-3 BRAVO (SOC ANALYST)',
         badgeId: `${role === 'AUTHORITY' ? 'ADM' : 'USR'}-GGL-${Math.floor(1000 + Math.random() * 9000)}`,
         authenticatedAt: new Date().toISOString()
       };
@@ -95,7 +95,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           email: userCred.user.email || emailFormatted,
           displayName: userCred.user.displayName || trimmedUser,
           role: 'ANALYST',
-          clearanceLevel: 'LEVEL-3 BRAVO (SOC USER)',
+          clearanceLevel: 'LEVEL-3 BRAVO (SOC ANALYST)',
           badgeId: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
           authenticatedAt: new Date().toISOString()
         });
@@ -108,7 +108,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         email: emailFormatted,
         displayName: trimmedUser,
         role: 'ANALYST',
-        clearanceLevel: 'LEVEL-3 BRAVO (SOC USER)',
+        clearanceLevel: 'LEVEL-3 BRAVO (SOC ANALYST)',
         badgeId: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
         authenticatedAt: new Date().toISOString()
       });
@@ -242,9 +242,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
                   <UserCheck className="w-5 h-5" />
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
-                  LEVEL-3 USER
-                </span>
               </div>
 
               <h2 className="text-xl font-black text-slate-900 tracking-tight">

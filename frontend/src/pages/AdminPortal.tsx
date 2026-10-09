@@ -248,7 +248,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ userSession }) => {
             Restricted Access: Level-5 Admin Clearance Required
           </h2>
           <p className="text-sm text-slate-600 max-w-lg mx-auto">
-            You are currently authenticated under <strong>{userSession?.clearanceLevel || 'LEVEL-3 BRAVO (SOC USER)'}</strong> as a Security Analyst.
+            You are currently authenticated under <strong>{userSession?.clearanceLevel || 'LEVEL-3 BRAVO (SOC ANALYST)'}</strong> as a Security Analyst.
             The SOC Admin Command Console contains sensitive system-level governance tools reserved for SuperAdmins.
           </p>
 
