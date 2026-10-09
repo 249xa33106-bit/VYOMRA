@@ -125,7 +125,7 @@ CASE IDENTIFIER: CASE-PX-TKD-${Math.random().toString(36).substring(2, 9).toUppe
    - Deterministic Risk:   ${riskScore} / 100 (HIGH SEVERITY / MALICIOUS)
 
 2. FORENSIC EVIDENCE & STATUTORY VIOLATIONS:
-   Forensic analysis by VYOMRA PHANTOM X has confirmed the aforementioned asset is actively
+   Forensic analysis by PHANTOM X Autonomous Cyber Defense has confirmed the aforementioned asset is actively
    staging a weaponized deceptive campaign involving:
    [X] Deceptive Homoglyph / Typosquatting impersonation of ${brandName.toUpperCase()}
    [X] Fraudulent credential harvesting and deceptive electronic spoofing
@@ -153,7 +153,7 @@ ${isAdmin ? 'AUTHORIZING SUPERADMIN COMMANDER:' : 'FORENSIC INVESTIGATOR (ANALYS
 AUTHORIZATION CLEARANCE: ${userSession?.clearanceLevel || (isAdmin ? 'LEVEL-5 ALPHA (STATUTORY COMMAND)' : 'LEVEL-3 BRAVO (INVESTIGATION DRAFT)')}
 BADGE ID: ${userSession?.badgeId || (isAdmin ? 'ADM-8821' : 'USR-4412')}
 STATUS: ${isAdmin ? 'OFFICIAL DIGITAL SIGNATURE APPLIED (MANDATORY REGISTRAR SUSPENSION)' : 'EVIDENTIARY DRAFT PENDING SUPERADMIN COUNTERSIGNATURE'}
-VYOMRA Autonomous Forensics Operations
+PHANTOM X Autonomous Forensics Operations
 https://phantom-x-efb92.web.app
 --------------------------------------------------------------------------------
 `.trim();

@@ -43,7 +43,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const session: UserSession = {
-        email: user.email || (role === 'AUTHORITY' ? 'admin@vyomra.defense.gov' : 'user@vyomra.soc'),
+        email: user.email || (role === 'AUTHORITY' ? 'admin@phantomx.defense.gov' : 'user@phantomx.soc'),
         displayName: user.displayName || (role === 'AUTHORITY' ? 'Admin Authority' : 'User Analyst'),
         role: role,
         clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (ADMIN COMMAND)' : 'LEVEL-3 BRAVO (SOC USER)',
@@ -55,7 +55,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       console.warn("Google OAuth popup note (applying authenticated session):", err);
       // Graceful fallback to verified session if popup blocked by browser
       const session: UserSession = {
-        email: role === 'AUTHORITY' ? 'admin@vyomra.defense.gov' : 'user@vyomra.soc',
+        email: role === 'AUTHORITY' ? 'admin@phantomx.defense.gov' : 'user@phantomx.soc',
         displayName: role === 'AUTHORITY' ? 'Admin Authority (Google)' : 'User Analyst (Google)',
         role: role,
         clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (ADMIN COMMAND)' : 'LEVEL-3 BRAVO (SOC USER)',
@@ -86,7 +86,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
 
     setLoadingRole('ANALYST');
-    const emailFormatted = trimmedUser.includes('@') ? trimmedUser : `${trimmedUser}@vyomra.soc`;
+    const emailFormatted = trimmedUser.includes('@') ? trimmedUser : `${trimmedUser}@phantomx.soc`;
 
     try {
       try {
@@ -137,7 +137,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
 
     setLoadingRole('AUTHORITY');
-    const emailFormatted = trimmedAdmin.includes('@') ? trimmedAdmin : `${trimmedAdmin}@vyomra.gov`;
+    const emailFormatted = trimmedAdmin.includes('@') ? trimmedAdmin : `${trimmedAdmin}@phantomx.defense.gov`;
 
     try {
       try {
@@ -180,10 +180,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <Shield className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-slate-900 tracking-tight text-lg leading-none">VYOMRA</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono">
-                PHANTOM X
+            <div className="flex items-center space-x-1.5">
+              <span className="font-black text-slate-900 tracking-wider text-lg leading-none">PHANTOM</span>
+              <span className="text-cyan-600 font-black text-lg leading-none">X</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono ml-1">
+                DEFENSE
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium leading-none mt-1">
@@ -266,7 +267,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       type="text"
                       value={userUsername}
                       onChange={(e) => setUserUsername(e.target.value)}
-                      placeholder="e.g. analyst@vyomra.soc"
+                      placeholder="e.g. analyst@phantomx.soc"
                       className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-mono transition-all"
                     />
                   </div>
@@ -377,7 +378,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       type="text"
                       value={adminUsername}
                       onChange={(e) => setAdminUsername(e.target.value)}
-                      placeholder="e.g. admin@vyomra.defense.gov"
+                      placeholder="e.g. admin@phantomx.defense.gov"
                       className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 font-mono transition-all"
                     />
                   </div>
@@ -459,7 +460,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="border-t border-slate-200 bg-white py-5 px-6 lg:px-12 text-center text-xs text-slate-500">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-700">VYOMRA Cyber Defense</span>
+            <span className="font-bold text-slate-700">PHANTOM X Cyber Defense</span>
             <span>•</span>
             <span>Zero-Trust Authority Gateway</span>
           </div>

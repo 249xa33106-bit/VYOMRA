@@ -70,7 +70,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
       const newEntry: FeedbackEntry = {
         id: `FB-${Date.now().toString().slice(-6)}`,
         name: name.trim() || 'Anonymous Specialist',
-        email: email.trim() || 'user@vyomra.soc',
+        email: email.trim() || 'user@phantomx.soc',
         category,
         rating,
         subject: subject.trim(),
@@ -119,7 +119,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
             User Feedback & Threat Research QA
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-            Help us refine VYOMRA's autonomous forensic models, heuristic detectors, and security command features.
+            Help us refine the autonomous forensic models, heuristic detectors, and security command features.
           </p>
         </div>
 
@@ -166,7 +166,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="analyst@vyomra.soc"
+                placeholder="analyst@phantomx.soc"
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all font-mono"
               />
             </div>
@@ -255,7 +255,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Please describe your experience, findings, or any improvements you would like to see in VYOMRA..."
+              placeholder="Please describe your experience, findings, or any improvements you would like to see in PHANTOM X..."
               className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all resize-y"
             />
           </div>

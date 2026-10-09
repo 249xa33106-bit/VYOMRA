@@ -109,7 +109,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ userSession }) => {
     {
       id: 'USR-8821',
       name: userSession?.displayName || 'Admin Authority',
-      email: userSession?.email || 'admin@vyomra.defense.gov',
+      email: userSession?.email || 'admin@phantomx.defense.gov',
       role: 'SOC Admin',
       clearance: 'LEVEL-5 ALPHA',
       activeSessions: 1,
@@ -119,7 +119,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ userSession }) => {
     {
       id: 'USR-4412',
       name: 'Agent Sarah Chen',
-      email: 's.chen@vyomra.soc',
+      email: 's.chen@phantomx.soc',
       role: 'Tier-2 Analyst',
       clearance: 'LEVEL-3 BRAVO',
       activeSessions: 2,
@@ -129,7 +129,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ userSession }) => {
     {
       id: 'USR-2918',
       name: 'Marcus Vance',
-      email: 'm.vance@vyomra.soc',
+      email: 'm.vance@phantomx.soc',
       role: 'Tier-1 Investigator',
       clearance: 'LEVEL-2 CHARLIE',
       activeSessions: 1,
@@ -139,7 +139,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ userSession }) => {
     {
       id: 'USR-1092',
       name: 'Elena Rostova',
-      email: 'e.rostova@vyomra.soc',
+      email: 'e.rostova@phantomx.soc',
       role: 'Forensic Lead',
       clearance: 'LEVEL-3 BRAVO',
       activeSessions: 0,
