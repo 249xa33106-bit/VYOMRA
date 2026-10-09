@@ -8,7 +8,8 @@ import {
   Download, 
   Lock, 
   Terminal,
-  ShieldAlert
+  ShieldAlert,
+  Gavel
 } from 'lucide-react';
 import { ScanResponse, SampleUrl } from '../types';
 import { api } from '../services/api';
@@ -21,12 +22,14 @@ interface UrlInvestigationProps {
   currentScan: ScanResponse | null;
   setCurrentScan: (scan: ScanResponse) => void;
   samples: SampleUrl[];
+  onNavigateTakedown?: () => void;
 }
 
 export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
   currentScan,
   setCurrentScan,
-  samples
+  samples,
+  onNavigateTakedown
 }) => {
   const [urlInput, setUrlInput] = useState<string>('');
   const [followRedirects, setFollowRedirects] = useState<boolean>(true);
@@ -172,8 +175,18 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
               </div>
             </div>
 
-            {/* Actions: Export PDF Dossier */}
+            {/* Actions: Export PDF Dossier & Takedown Playbook */}
             <div className="flex items-center space-x-2 shrink-0">
+              {onNavigateTakedown && (
+                <button
+                  onClick={onNavigateTakedown}
+                  className="px-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-mono font-bold text-xs uppercase rounded-xl transition-all shadow-md shadow-rose-600/20 flex items-center space-x-2"
+                  title="Generate ICANN RAA 3.18 Cease & Desist Takedown Notice"
+                >
+                  <Gavel className="w-4 h-4" />
+                  <span>Initiate Takedown</span>
+                </button>
+              )}
               <button
                 onClick={() => exportScanToPdf(currentScan)}
                 className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono font-bold text-xs uppercase rounded-xl transition-all shadow-md shadow-cyan-600/20 flex items-center space-x-2"

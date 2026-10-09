@@ -11,7 +11,8 @@ import {
   Settings as SettingsIcon,
   MessageSquareHeart,
   Home,
-  Terminal
+  Terminal,
+  Gavel
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'history', label: 'Scan History', icon: History },
     { id: 'simulator', label: 'What-If Simulator', icon: Sliders, badge: 'SANDBOX' },
     { id: 'reports', label: 'Reports & Vault', icon: FileText },
+    { id: 'takedown', label: 'Takedown Dispatcher', icon: Gavel, badge: 'AUTO' },
     { id: 'feedback', label: 'User Feedback', icon: MessageSquareHeart, badge: 'NEW' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];

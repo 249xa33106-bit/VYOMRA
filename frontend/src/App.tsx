@@ -10,6 +10,7 @@ import { ThreatIntelView } from './pages/ThreatIntelView';
 import { ScanHistoryView } from './pages/ScanHistoryView';
 import { WhatIfSimulatorView } from './pages/WhatIfSimulatorView';
 import { ReportsView } from './pages/ReportsView';
+import { TakedownDispatcher } from './pages/TakedownDispatcher';
 import { FeedbackView } from './pages/FeedbackView';
 import { SettingsView } from './pages/SettingsView';
 import { ScanResponse, SampleUrl, UserSession } from './types';
@@ -99,6 +100,8 @@ export function App() {
         return { title: 'What-If Defense Simulator', subtitle: 'Hypothetical risk scenario sandbox' };
       case 'reports':
         return { title: 'Forensic Reports & Verification' };
+      case 'takedown':
+        return { title: 'Takedown Playbooks & Remediation', subtitle: 'Automated ICANN RAA 3.18 registrar & CERT cease-and-desist dispatcher' };
       case 'feedback':
         return { title: 'User Feedback & QA Portal' };
       case 'settings':
@@ -163,6 +166,7 @@ export function App() {
               currentScan={currentScan}
               setCurrentScan={setCurrentScan}
               samples={samples}
+              onNavigateTakedown={() => setCurrentTab('takedown')}
             />
           )}
 
@@ -196,6 +200,13 @@ export function App() {
 
           {currentTab === 'reports' && (
             <ReportsView currentScan={currentScan} />
+          )}
+
+          {currentTab === 'takedown' && (
+            <TakedownDispatcher
+              currentScan={currentScan}
+              onNavigateInvestigate={() => setCurrentTab('investigate')}
+            />
           )}
 
           {currentTab === 'feedback' && (
