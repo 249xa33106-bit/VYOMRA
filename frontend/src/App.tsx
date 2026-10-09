@@ -22,17 +22,9 @@ export function App() {
   const [samples, setSamples] = useState<SampleUrl[]>([]);
 
   useEffect(() => {
-    // Check saved local session
-    const saved = localStorage.getItem('px_session');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setUserSession(parsed);
-        setViewMode('app');
-      } catch (e) {
-        localStorage.removeItem('px_session');
-      }
-    }
+    // Clear any previous persistent session on initial mount so starting page is always this login page
+    localStorage.removeItem('px_session');
+    setViewMode('landing');
 
     // Fetch initial sample benchmark dataset
     api.getSampleDataset()
