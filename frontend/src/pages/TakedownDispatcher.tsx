@@ -17,11 +17,12 @@ import {
   Sparkles,
   ArrowRight
 } from 'lucide-react';
-import { ScanResponse } from '../types';
+import { ScanResponse, UserSession } from '../types';
 import { exportScanToPdf } from '../services/pdfExporter';
 
 interface TakedownDispatcherProps {
   currentScan?: ScanResponse | null;
+  userSession?: UserSession | null;
   onNavigateInvestigate?: () => void;
 }
 
@@ -63,8 +64,10 @@ const BRAND_LEGAL_MAP: Record<string, string> = {
 
 export const TakedownDispatcher: React.FC<TakedownDispatcherProps> = ({ 
   currentScan,
+  userSession,
   onNavigateInvestigate 
 }) => {
+  const isAdmin = userSession?.role === 'AUTHORITY';
   const [copied, setCopied] = useState(false);
   const [isDispatching, setIsDispatching] = useState(false);
   const [dispatchSuccess, setDispatchSuccess] = useState(false);
@@ -146,7 +149,10 @@ Failure to remediate verified phishing infrastructure may result in direct escal
 Compliance, national CERT coordination centers, and upstream transit provider abuse teams.
 
 Respectfully submitted,
-CYBER DEFENSE INCIDENT RESPONSE TEAM
+${isAdmin ? 'AUTHORIZING SUPERADMIN COMMANDER:' : 'FORENSIC INVESTIGATOR (ANALYST):'} ${userSession?.displayName || (isAdmin ? 'Admin Authority' : 'Security Analyst')}
+AUTHORIZATION CLEARANCE: ${userSession?.clearanceLevel || (isAdmin ? 'LEVEL-5 ALPHA (STATUTORY COMMAND)' : 'LEVEL-3 BRAVO (INVESTIGATION DRAFT)')}
+BADGE ID: ${userSession?.badgeId || (isAdmin ? 'ADM-8821' : 'USR-4412')}
+STATUS: ${isAdmin ? 'OFFICIAL DIGITAL SIGNATURE APPLIED (MANDATORY REGISTRAR SUSPENSION)' : 'EVIDENTIARY DRAFT PENDING SUPERADMIN COUNTERSIGNATURE'}
 VYOMRA Autonomous Forensics Operations
 https://phantom-x-efb92.web.app
 --------------------------------------------------------------------------------
@@ -213,9 +219,21 @@ https://phantom-x-efb92.web.app
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs font-mono px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 shrink-0">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>ICANN RAA 3.18 Standard</span>
+        <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 shrink-0">
+          <div className="flex items-center space-x-2 text-xs font-mono px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>ICANN RAA 3.18 Standard</span>
+          </div>
+          {isAdmin ? (
+            <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-mono font-bold flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+              <span>SUPERADMIN LEVEL-5 AUTHORITY</span>
+            </div>
+          ) : (
+            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-mono font-bold flex items-center space-x-1.5">
+              <span>ANALYST DRAFT CLEARANCE</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -342,18 +360,22 @@ https://phantom-x-efb92.web.app
         {/* 1-Click Automated Dispatch Simulator */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl gap-3">
           <div>
-            <div className="text-xs font-bold text-red-900">
-              Autonomous Registrar Dispatch API
+            <div className="text-xs font-bold text-red-900 flex items-center space-x-1.5">
+              <span>{isAdmin ? 'Autonomous Registrar Dispatch API (SuperAdmin Authority)' : 'Analyst Takedown Escalation Pipeline'}</span>
             </div>
             <div className="text-[11px] text-red-700">
-              Transmit digital notice directly to registrar abuse API endpoints with cryptographic hash verification.
+              {isAdmin 
+                ? 'Applies Level-5 cryptographic digital seal and directly initiates registrar domain revocation protocol.'
+                : 'Generates formal evidentiary notice and logs the escalation under your Analyst Badge ID.'}
             </div>
           </div>
 
           <button
             onClick={handleSimulateDispatch}
             disabled={isDispatching}
-            className="w-full sm:w-auto px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold font-mono text-xs rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 shrink-0 cursor-pointer disabled:opacity-50"
+            className={`w-full sm:w-auto px-5 py-2.5 text-white font-bold font-mono text-xs rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 shrink-0 cursor-pointer disabled:opacity-50 ${
+              isAdmin ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             {isDispatching ? (
               <>
@@ -363,7 +385,7 @@ https://phantom-x-efb92.web.app
             ) : (
               <>
                 <Gavel className="w-3.5 h-3.5" />
-                <span>Execute 1-Click Takedown</span>
+                <span>{isAdmin ? 'Execute Official ICANN Takedown' : 'Dispatch Analyst Takedown Notice'}</span>
               </>
             )}
           </button>

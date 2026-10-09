@@ -9,9 +9,10 @@ import {
   Lock, 
   Terminal,
   ShieldAlert,
-  Gavel
+  Gavel,
+  Ban
 } from 'lucide-react';
-import { ScanResponse, SampleUrl } from '../types';
+import { ScanResponse, SampleUrl, UserSession } from '../types';
 import { api } from '../services/api';
 import { RiskGauge } from '../components/RiskGauge';
 import { FindingsList } from '../components/FindingsList';
@@ -22,15 +23,20 @@ interface UrlInvestigationProps {
   currentScan: ScanResponse | null;
   setCurrentScan: (scan: ScanResponse) => void;
   samples: SampleUrl[];
+  userSession?: UserSession | null;
   onNavigateTakedown?: () => void;
+  onNavigateAdmin?: () => void;
 }
 
 export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
   currentScan,
   setCurrentScan,
   samples,
-  onNavigateTakedown
+  userSession,
+  onNavigateTakedown,
+  onNavigateAdmin
 }) => {
+  const isAdmin = userSession?.role === 'AUTHORITY';
   const [urlInput, setUrlInput] = useState<string>('');
   const [followRedirects, setFollowRedirects] = useState<boolean>(true);
   const [enableIntel, setEnableIntel] = useState<boolean>(true);
@@ -177,6 +183,16 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
 
             {/* Actions: Export PDF Dossier & Takedown Playbook */}
             <div className="flex items-center space-x-2 shrink-0">
+              {isAdmin && onNavigateAdmin && (
+                <button
+                  onClick={onNavigateAdmin}
+                  className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 text-white font-mono font-bold text-xs uppercase rounded-xl transition-all shadow-md shadow-indigo-700/20 flex items-center space-x-2"
+                  title="Open SOC Admin Console to Quarantine Host"
+                >
+                  <Ban className="w-4 h-4" />
+                  <span>Quarantine Host</span>
+                </button>
+              )}
               {onNavigateTakedown && (
                 <button
                   onClick={onNavigateTakedown}

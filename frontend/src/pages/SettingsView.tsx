@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Settings as SettingsIcon, Shield, Key, Cpu } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, Key, Cpu, ShieldCheck, Lock } from 'lucide-react';
 import { api } from '../services/api';
+import { UserSession } from '../types';
 
-export const SettingsView: React.FC = () => {
+interface SettingsViewProps {
+  userSession?: UserSession | null;
+}
+
+export const SettingsView: React.FC<SettingsViewProps> = ({ userSession }) => {
+  const isAdmin = userSession?.role === 'AUTHORITY';
   const [healthData, setHealthData] = useState<any | null>(null);
 
   useEffect(() => {
@@ -11,14 +17,28 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-lg font-black text-slate-900 font-mono uppercase flex items-center space-x-2">
-          <SettingsIcon className="w-5 h-5 text-cyan-600" />
-          <span>System Settings & Defense Architecture</span>
-        </h1>
-        <p className="text-xs text-slate-500">
-          Security controls, provider adapters, isolation policies, and algorithmic versioning
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-lg font-black text-slate-900 font-mono uppercase flex items-center space-x-2">
+            <SettingsIcon className="w-5 h-5 text-cyan-600" />
+            <span>System Settings & Defense Architecture</span>
+          </h1>
+          <p className="text-xs text-slate-500">
+            Security controls, provider adapters, isolation policies, and algorithmic versioning
+          </p>
+        </div>
+
+        {isAdmin ? (
+          <div className="px-3.5 py-1.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-mono font-bold flex items-center space-x-2 shrink-0">
+            <ShieldCheck className="w-4 h-4 text-rose-600" />
+            <span>ADMIN WRITE PRIVILEGES ACTIVE</span>
+          </div>
+        ) : (
+          <div className="px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-mono font-bold flex items-center space-x-2 shrink-0">
+            <Lock className="w-4 h-4 text-blue-600" />
+            <span>ANALYST READ-ONLY MODE</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

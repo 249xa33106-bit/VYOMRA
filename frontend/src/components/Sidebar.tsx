@@ -12,13 +12,17 @@ import {
   MessageSquareHeart,
   Home,
   Terminal,
-  Gavel
+  Gavel,
+  ShieldCheck,
+  Lock
 } from 'lucide-react';
+import { UserSession } from '../types';
 
 interface SidebarProps {
   currentTab: string;
   setCurrentTab: (tab: string) => void;
   activeScanId?: string;
+  userSession?: UserSession | null;
   onGoToLanding?: () => void;
 }
 
@@ -26,8 +30,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentTab, 
   setCurrentTab, 
   activeScanId,
+  userSession,
   onGoToLanding 
 }) => {
+  const isAdmin = userSession?.role === 'AUTHORITY';
+
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'investigate', label: 'User Investigation', icon: Search, badge: 'CORE' },
@@ -37,7 +44,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'history', label: 'Scan History', icon: History },
     { id: 'simulator', label: 'What-If Simulator', icon: Sliders, badge: 'SANDBOX' },
     { id: 'reports', label: 'Reports & Vault', icon: FileText },
-    { id: 'takedown', label: 'Takedown Dispatcher', icon: Gavel, badge: 'AUTO' },
+    { id: 'takedown', label: 'Takedown Dispatcher', icon: Gavel, badge: isAdmin ? 'EXECUTE' : 'DRAFT' },
+    { id: 'admin', label: 'SOC Admin Console', icon: ShieldCheck, badge: isAdmin ? 'LEVEL-5' : 'LOCKED' },
     { id: 'feedback', label: 'User Feedback', icon: MessageSquareHeart, badge: 'NEW' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
@@ -101,6 +109,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       ? 'bg-cyan-100 text-cyan-800 border border-cyan-200 font-bold'
                       : item.badge === 'SANDBOX'
                       ? 'bg-violet-100 text-violet-800 border border-violet-200 font-bold'
+                      : item.badge === 'LEVEL-5'
+                      ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold'
+                      : item.badge === 'EXECUTE'
+                      ? 'bg-amber-100 text-amber-800 border border-amber-300 font-bold'
+                      : item.badge === 'LOCKED'
+                      ? 'bg-slate-200 text-slate-600 font-mono'
                       : 'bg-slate-100 text-slate-500'
                   }`}
                 >
@@ -112,24 +126,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Bottom Status Panel */}
-      <div className="p-4 border-t border-slate-200 bg-slate-50">
-        <div className="flex items-center justify-between text-[11px] mb-2 font-mono">
+      {/* Bottom User Role & Engine Panel */}
+      <div className="p-3 border-t border-slate-200 bg-slate-50 space-y-2.5">
+        {userSession && (
+          <div className={`p-2.5 rounded-xl border text-xs font-mono ${
+            isAdmin 
+              ? 'bg-indigo-50 border-indigo-200 text-indigo-950' 
+              : 'bg-blue-50 border-blue-200 text-blue-950'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                isAdmin ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-blue-100 text-blue-800 border border-blue-200'
+              }`}>
+                {isAdmin ? 'SOC SUPERADMIN' : 'ANALYST TIER-2'}
+              </span>
+              <span className="text-[10px] text-slate-500">{userSession.badgeId}</span>
+            </div>
+            <div className="font-bold text-slate-900 mt-1 truncate">
+              {userSession.displayName}
+            </div>
+            <div className="text-[10px] text-slate-500">
+              {userSession.clearanceLevel}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between text-[11px] font-mono px-1">
           <span className="text-slate-500">ENGINE STATUS</span>
           <span className="flex items-center text-emerald-600 space-x-1.5 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>READY</span>
           </span>
-        </div>
-        <div className="space-y-1 text-[10px] font-mono text-slate-500">
-          <div className="flex justify-between">
-            <span>Deterministic Matrix</span>
-            <span className="text-slate-800 font-semibold">v1.4.2</span>
-          </div>
-          <div className="flex justify-between">
-            <span>SSRF Egress Shield</span>
-            <span className="text-emerald-700 font-bold">ENFORCED</span>
-          </div>
         </div>
       </div>
     </aside>

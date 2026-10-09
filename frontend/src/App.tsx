@@ -11,6 +11,7 @@ import { ScanHistoryView } from './pages/ScanHistoryView';
 import { WhatIfSimulatorView } from './pages/WhatIfSimulatorView';
 import { ReportsView } from './pages/ReportsView';
 import { TakedownDispatcher } from './pages/TakedownDispatcher';
+import { AdminPortal } from './pages/AdminPortal';
 import { FeedbackView } from './pages/FeedbackView';
 import { SettingsView } from './pages/SettingsView';
 import { ScanResponse, SampleUrl, UserSession } from './types';
@@ -102,6 +103,8 @@ export function App() {
         return { title: 'Forensic Reports & Verification' };
       case 'takedown':
         return { title: 'Takedown Playbooks & Remediation', subtitle: 'Automated ICANN RAA 3.18 registrar & CERT cease-and-desist dispatcher' };
+      case 'admin':
+        return { title: 'SOC Admin Command Console', subtitle: 'Global quarantine, team RBAC, and incident governance' };
       case 'feedback':
         return { title: 'User Feedback & QA Portal' };
       case 'settings':
@@ -142,6 +145,7 @@ export function App() {
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         activeScanId={currentScan?.scan_id}
+        userSession={userSession}
         onGoToLanding={() => setViewMode('landing')}
       />
 
@@ -166,7 +170,9 @@ export function App() {
               currentScan={currentScan}
               setCurrentScan={setCurrentScan}
               samples={samples}
+              userSession={userSession}
               onNavigateTakedown={() => setCurrentTab('takedown')}
+              onNavigateAdmin={() => setCurrentTab('admin')}
             />
           )}
 
@@ -205,6 +211,14 @@ export function App() {
           {currentTab === 'takedown' && (
             <TakedownDispatcher
               currentScan={currentScan}
+              userSession={userSession}
+              onNavigateInvestigate={() => setCurrentTab('investigate')}
+            />
+          )}
+
+          {currentTab === 'admin' && (
+            <AdminPortal
+              userSession={userSession}
               onNavigateInvestigate={() => setCurrentTab('investigate')}
             />
           )}
@@ -214,7 +228,7 @@ export function App() {
           )}
 
           {currentTab === 'settings' && (
-            <SettingsView />
+            <SettingsView userSession={userSession} />
           )}
         </main>
       </div>
