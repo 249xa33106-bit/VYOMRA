@@ -72,40 +72,48 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    setLoadingRole('ANALYST');
 
-    const emailOrUser = userUsername.trim() || 'user@vyomra.soc';
-    const emailFormatted = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@vyomra.soc`;
-    const password = userPassword.trim() || 'User@1234';
+    const trimmedUser = userUsername.trim();
+    const trimmedPass = userPassword.trim();
+
+    if (!trimmedUser) {
+      setErrorMessage("Please enter your username or email address to log in as User.");
+      return;
+    }
+    if (!trimmedPass) {
+      setErrorMessage("Please enter your password to log in as User.");
+      return;
+    }
+
+    setLoadingRole('ANALYST');
+    const emailFormatted = trimmedUser.includes('@') ? trimmedUser : `${trimmedUser}@vyomra.soc`;
 
     try {
-      if (userUsername && userPassword) {
-        try {
-          const userCred = await signInWithEmailAndPassword(auth, emailFormatted, password);
-          onLogin({
-            email: userCred.user.email || emailFormatted,
-            displayName: userCred.user.displayName || userUsername || 'User Analyst',
-            role: 'ANALYST',
-            clearanceLevel: 'LEVEL-3 BRAVO (SOC USER)',
-            badgeId: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-            authenticatedAt: new Date().toISOString()
-          });
-          return;
-        } catch (fbErr: any) {
-          console.warn("Firebase local fallback:", fbErr.message);
-        }
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, emailFormatted, trimmedPass);
+        onLogin({
+          email: userCred.user.email || emailFormatted,
+          displayName: userCred.user.displayName || trimmedUser,
+          role: 'ANALYST',
+          clearanceLevel: 'LEVEL-3 BRAVO (SOC USER)',
+          badgeId: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
+          authenticatedAt: new Date().toISOString()
+        });
+        return;
+      } catch (fbErr: any) {
+        console.warn("Firebase local fallback:", fbErr.message);
       }
 
       onLogin({
         email: emailFormatted,
-        displayName: userUsername || 'User Analyst',
+        displayName: trimmedUser,
         role: 'ANALYST',
         clearanceLevel: 'LEVEL-3 BRAVO (SOC USER)',
         badgeId: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
         authenticatedAt: new Date().toISOString()
       });
     } catch (err: any) {
-      setErrorMessage(err.message || 'Login failed');
+      setErrorMessage(err.message || 'Login failed. Please check credentials.');
     } finally {
       setLoadingRole(null);
     }
@@ -115,40 +123,48 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    setLoadingRole('AUTHORITY');
 
-    const emailOrUser = adminUsername.trim() || 'admin@vyomra.defense.gov';
-    const emailFormatted = emailOrUser.includes('@') ? emailOrUser : `${emailOrUser}@vyomra.gov`;
-    const password = adminPassword.trim() || 'Admin@1234';
+    const trimmedAdmin = adminUsername.trim();
+    const trimmedPass = adminPassword.trim();
+
+    if (!trimmedAdmin) {
+      setErrorMessage("Please enter your administrator username or email to log in as Admin.");
+      return;
+    }
+    if (!trimmedPass) {
+      setErrorMessage("Please enter your administrator password or security key.");
+      return;
+    }
+
+    setLoadingRole('AUTHORITY');
+    const emailFormatted = trimmedAdmin.includes('@') ? trimmedAdmin : `${trimmedAdmin}@vyomra.gov`;
 
     try {
-      if (adminUsername && adminPassword) {
-        try {
-          const userCred = await signInWithEmailAndPassword(auth, emailFormatted, password);
-          onLogin({
-            email: userCred.user.email || emailFormatted,
-            displayName: userCred.user.displayName || adminUsername || 'Admin Authority',
-            role: 'AUTHORITY',
-            clearanceLevel: 'LEVEL-5 ALPHA (ADMIN COMMAND)',
-            badgeId: `ADM-${Math.floor(1000 + Math.random() * 9000)}`,
-            authenticatedAt: new Date().toISOString()
-          });
-          return;
-        } catch (fbErr: any) {
-          console.warn("Firebase admin fallback:", fbErr.message);
-        }
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, emailFormatted, trimmedPass);
+        onLogin({
+          email: userCred.user.email || emailFormatted,
+          displayName: userCred.user.displayName || trimmedAdmin,
+          role: 'AUTHORITY',
+          clearanceLevel: 'LEVEL-5 ALPHA (ADMIN COMMAND)',
+          badgeId: `ADM-${Math.floor(1000 + Math.random() * 9000)}`,
+          authenticatedAt: new Date().toISOString()
+        });
+        return;
+      } catch (fbErr: any) {
+        console.warn("Firebase admin fallback:", fbErr.message);
       }
 
       onLogin({
         email: emailFormatted,
-        displayName: adminUsername || 'Admin Authority',
+        displayName: trimmedAdmin,
         role: 'AUTHORITY',
         clearanceLevel: 'LEVEL-5 ALPHA (ADMIN COMMAND)',
         badgeId: `ADM-${Math.floor(1000 + Math.random() * 9000)}`,
         authenticatedAt: new Date().toISOString()
       });
     } catch (err: any) {
-      setErrorMessage(err.message || 'Admin login failed');
+      setErrorMessage(err.message || 'Admin login failed. Please check credentials.');
     } finally {
       setLoadingRole(null);
     }
@@ -246,6 +262,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                     <input
+                      required
                       type="text"
                       value={userUsername}
                       onChange={(e) => setUserUsername(e.target.value)}
@@ -262,6 +279,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="relative">
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                     <input
+                      required
                       type="password"
                       value={userPassword}
                       onChange={(e) => setUserPassword(e.target.value)}
@@ -355,6 +373,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                     <input
+                      required
                       type="text"
                       value={adminUsername}
                       onChange={(e) => setAdminUsername(e.target.value)}
@@ -371,6 +390,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="relative">
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
                     <input
+                      required
                       type="password"
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
