@@ -20,7 +20,7 @@ import { api } from './services/api';
 export function App() {
   const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing');
   const [userSession, setUserSession] = useState<UserSession | null>(null);
-  const [currentTab, setCurrentTab] = useState<string>('investigate');
+  const [currentTab, setCurrentTab] = useState<string>('overview');
   const [currentScan, setCurrentScan] = useState<ScanResponse | null>(null);
   const [samples, setSamples] = useState<SampleUrl[]>([]);
 
@@ -50,7 +50,7 @@ export function App() {
     setUserSession(session);
     localStorage.setItem('px_session', JSON.stringify(session));
     setViewMode('app');
-    setCurrentTab('investigate');
+    setCurrentTab('overview');
   };
 
   const handleExploreGuest = () => {
@@ -64,7 +64,7 @@ export function App() {
     };
     setUserSession(guestSession);
     setViewMode('app');
-    setCurrentTab('investigate');
+    setCurrentTab('overview');
   };
 
   const handleSignOut = () => {
