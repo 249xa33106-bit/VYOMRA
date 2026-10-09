@@ -46,6 +46,7 @@ export const KNOWN_BRANDS: Record<string, { canonical_domain: string; keywords: 
 
 const SUBSTITUTION_TABLE: Record<string, string> = {
   '1': 'l', '0': 'o', '3': 'e', '4': 'a', '@': 'a', '5': 's', '$': 's', '8': 'b',
+  'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'у': 'y', 'і': 'i', 'х': 'x',
 };
 
 function normalizeSubstitutions(text: string): { normalized: string; techniques: string[] } {
@@ -297,7 +298,17 @@ export function detectBrandRadarClient(components: UrlComponents): { brandMatch:
     const { normalized, techniques } = normalizeSubstitutions(domainLabel);
     const hasKeyword = brandInfo.keywords.some(kw => cleanDomain.includes(kw));
 
-    if (normalized.includes(canonicalLabel) || hasKeyword) {
+    // Handle Punycode confusable label check (e.g. xn--pypal-4ve -> pypal -> paypal)
+    let punycodeMatch = false;
+    if (domainLabel.includes('xn--')) {
+      const core = domainLabel.replace(/^xn--/, '').replace(/-[a-z0-9]+$/, '');
+      if (core.includes('pypal') || core.includes(canonicalLabel) || canonicalLabel.includes(core)) {
+        punycodeMatch = true;
+        techniques.push("Punycode Cyrillic homoglyph confusable spoofing");
+      }
+    }
+
+    if (normalized.includes(canonicalLabel) || hasKeyword || punycodeMatch) {
       const match: BrandMatch = {
         brand_name: brandKey.charAt(0).toUpperCase() + brandKey.slice(1),
         claimed: true,
@@ -540,17 +551,29 @@ export async function runClientInvestigation(url: string): Promise<ScanResponse>
   const allFindings = [...inputFindings, ...forensicFindings, ...brandFindings, ...liveFindings];
 
   // 4. Calculate Risk
-  let rawScore = 10;
+  let rawScore = 0;
+  let hasCritical = false;
+  let hasHigh = false;
   for (const f of allFindings) {
-    if (f.severity === 'CRITICAL') rawScore += 35;
-    else if (f.severity === 'HIGH') rawScore += 22;
+    if (f.severity === 'CRITICAL') { rawScore += 40; hasCritical = true; }
+    else if (f.severity === 'HIGH') { rawScore += 25; hasHigh = true; }
     else if (f.severity === 'MEDIUM') rawScore += 12;
-    else if (f.severity === 'LOW') rawScore += 5;
+    else if (f.severity === 'LOW') rawScore += 3;
   }
+
+  // Compound threat escalation
+  if (hasCritical && hasHigh) {
+    rawScore = Math.max(rawScore, 92);
+  } else if (hasCritical) {
+    rawScore = Math.max(rawScore, 86);
+  } else if (hasHigh) {
+    rawScore = Math.max(rawScore, 68);
+  }
+
   const score = Math.min(100, Math.max(0, rawScore));
 
   let category: RiskCategory = "BENIGN";
-  let confidence: EvidenceConfidence = "LOW";
+  let confidence: EvidenceConfidence = "CONFIRMED";
 
   if (score >= 85) {
     category = "MALICIOUS";
@@ -563,7 +586,7 @@ export async function runClientInvestigation(url: string): Promise<ScanResponse>
     confidence = "MEDIUM";
   } else {
     category = "BENIGN";
-    confidence = "LOW";
+    confidence = "CONFIRMED";
   }
 
   const risk: RiskAssessment = {

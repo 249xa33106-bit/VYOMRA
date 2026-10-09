@@ -102,7 +102,9 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({ risk, isSimulation }) => {
             <div className="text-[11px] font-mono text-slate-500 uppercase">EVIDENCE CONFIDENCE</div>
             <div className="text-sm font-bold text-slate-900 flex items-center space-x-1.5 font-mono">
               <Icon className="w-4 h-4" style={{ color }} />
-              <span>{risk.confidence} CONFIDENCE</span>
+              <span>
+                {risk.category === "BENIGN" ? "CONFIRMED BENIGN (SAFE)" : `${risk.confidence} CONFIDENCE`}
+              </span>
             </div>
           </div>
 

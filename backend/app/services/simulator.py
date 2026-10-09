@@ -10,7 +10,7 @@ def run_what_if_simulation(req: SimulationRequest) -> SimulationResponse:
     """
     hypotheses: list[str] = []
     sim_findings: list[Finding] = []
-    sim_score = 15  # baseline benign score
+    sim_score = 0  # baseline zero score when all conditions are off
 
     if req.flag_brand_mismatch:
         hypotheses.append("Hypothesis: Brand/Domain Impersonation Active")
@@ -122,7 +122,7 @@ def run_what_if_simulation(req: SimulationRequest) -> SimulationResponse:
         confidence = "MEDIUM"
     else:
         category = "BENIGN"
-        confidence = "LOW"
+        confidence = "CONFIRMED" if final_score == 0 else "HIGH"
 
     # Build simulated graph
     components, _ = normalize_and_parse_url(req.base_url)
@@ -146,11 +146,14 @@ def run_what_if_simulation(req: SimulationRequest) -> SimulationResponse:
         is_simulation=True
     )
 
-    delta_msg = (
-        f"Simulated impact: Toggling {len(hypotheses)} signal hypotheses shifted the theoretical threat score "
-        f"from baseline 15 to {final_score}/100 ({category}). "
-        f"Notice how combining brand impersonation with credential harvesting produces compound severity."
-    )
+    if len(hypotheses) == 0:
+        delta_msg = "All threat conditions are turned OFF. Zero threat signals active (0/100 BENIGN - Clean Baseline)."
+    else:
+        delta_msg = (
+            f"Simulated impact: Toggling {len(hypotheses)} signal hypotheses shifted the theoretical threat score "
+            f"to {final_score}/100 ({category}). "
+            f"Notice how combining brand impersonation with credential harvesting produces compound severity."
+        )
 
     from app.services.story_generator import AttackStory
     story = AttackStory(

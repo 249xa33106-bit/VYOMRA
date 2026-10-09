@@ -44,8 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'history', label: 'Scan History', icon: History },
     { id: 'simulator', label: 'What-If Simulator', icon: Sliders, badge: 'SANDBOX' },
     { id: 'reports', label: 'Reports & Vault', icon: FileText },
-    { id: 'takedown', label: 'Takedown Dispatcher', icon: Gavel, badge: isAdmin ? 'EXECUTE' : 'DRAFT' },
-    { id: 'admin', label: 'SOC Admin Console', icon: ShieldCheck, badge: isAdmin ? 'LEVEL-5' : 'LOCKED' },
+    ...(isAdmin ? [{ id: 'admin', label: 'SOC Admin Console', icon: ShieldCheck, badge: 'ADMIN' }] : []),
     { id: 'feedback', label: 'User Feedback', icon: MessageSquareHeart, badge: 'NEW' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];

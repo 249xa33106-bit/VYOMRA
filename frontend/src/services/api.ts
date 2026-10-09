@@ -36,46 +36,46 @@ async function fastFetch(url: string, options: RequestInit = {}, timeoutMs = 120
 
 const STATIC_SAMPLE_DATASET: SampleUrl[] = [
   {
-    category: "BENIGN",
-    label: "GPREC Official College Portal",
-    url: "https://www.gprec.ac.in",
-    expected_score_range: [0, 25],
-    description: "Verified institutional educational domain with standard SSL."
-  },
-  {
-    category: "BENIGN",
-    label: "Legitimate Python Software Org",
-    url: "https://www.python.org/downloads",
-    expected_score_range: [0, 25],
-    description: "Standard open-source programming documentation with clean reputation."
+    category: "PUNYCODE_HOMOGLYPH",
+    label: "🚨 Cyrillic Homoglyph Attack",
+    url: "http://xn--pypal-4ve.com/account-recovery",
+    expected_score_range: [85, 98],
+    description: "Punycode domain spoofing PayPal using confusable Cyrillic glyphs."
   },
   {
     category: "TYPOSQUATTING",
-    label: "PayPal Leetspeak Typosquatting",
+    label: "⚠️ PayPal Leetspeak Typosquatting",
     url: "http://paypa1-security-verification.com/login",
-    expected_score_range: [65, 95],
-    description: "Character substitution '1' for 'l' impersonating PayPal."
-  },
-  {
-    category: "PUNYCODE_HOMOGLYPH",
-    label: "Cyrillic Homoglyph Attack",
-    url: "http://xn--pypal-4ve.com/account-recovery",
-    expected_score_range: [70, 95],
-    description: "Punycode domain spoofing PayPal using Cyrillic lookalikes."
+    expected_score_range: [85, 95],
+    description: "Character substitution '1' for 'l' impersonating PayPal credential gateway."
   },
   {
     category: "RAW_IP_HOST",
-    label: "Direct IP Host on Custom Port",
+    label: "🛑 Direct Malware IP (.exe Payload)",
     url: "http://198.51.100.42:8080/download/update.exe",
-    expected_score_range: [75, 100],
-    description: "Direct IP address on non-standard port 8080 targeting an executable binary."
+    expected_score_range: [85, 100],
+    description: "Direct numeric IP on port 8080 serving a binary payload without DNS."
   },
   {
     category: "EMBEDDED_CREDENTIALS",
-    label: "Embedded Authority Credentials",
+    label: "⚠️ Embedded Authority Credentials",
     url: "http://admin:supersecret@suspicious-bank-auth.com/portal",
-    expected_score_range: [50, 85],
+    expected_score_range: [65, 85],
     description: "Authority credentials in URL used to disguise phishing target."
+  },
+  {
+    category: "BENIGN",
+    label: "✅ GPREC Institutional Portal",
+    url: "https://www.gprec.ac.in",
+    expected_score_range: [0, 10],
+    description: "Verified institutional educational domain with standard SSL (Clean Baseline)."
+  },
+  {
+    category: "BENIGN",
+    label: "✅ Python Software Foundation",
+    url: "https://www.python.org/downloads",
+    expected_score_range: [0, 10],
+    description: "Standard open-source programming documentation with clean reputation."
   }
 ];
 
@@ -248,7 +248,7 @@ ${scan.findings.map(f => `### [${f.severity}] ${f.name} (\`${f.detector_id}\`)
     }
 
     // Instant zero-latency Client-side simulation
-    let sim_score = 15;
+    let sim_score = 0;
     const hypotheses: string[] = [];
     if (req.flag_brand_mismatch) { sim_score += 35; hypotheses.push("Brand/Domain Impersonation Active"); }
     if (req.flag_suspicious_credential_form) { sim_score += 25; hypotheses.push("Password/Credential Inputs Detected"); }
@@ -260,14 +260,19 @@ ${scan.findings.map(f => `### [${f.severity}] ${f.name} (\`${f.detector_id}\`)
 
     const final_score = Math.min(100, sim_score);
     const category = final_score >= 85 ? "MALICIOUS" : final_score >= 65 ? "HIGH_RISK" : final_score >= 30 ? "SUSPICIOUS" : "BENIGN";
+    const confidence = final_score === 0 ? "CONFIRMED" : req.flag_threat_intel_match ? "CONFIRMED" : "HIGH";
+
+    const delta_explanation = hypotheses.length === 0
+      ? "All threat conditions are turned OFF. Zero threat signals active (0/100 BENIGN - Clean Baseline)."
+      : `Simulated impact: Toggling ${hypotheses.length} signal hypotheses shifted the theoretical threat score to ${final_score}/100 (${category}).`;
 
     return {
       is_simulation: true,
       simulated_score: final_score,
       simulated_category: category,
-      simulated_confidence: req.flag_threat_intel_match ? "CONFIRMED" : "HIGH",
+      simulated_confidence: confidence,
       active_hypotheses: hypotheses,
-      delta_explanation: `Simulated impact: Toggling ${hypotheses.length} signal hypotheses shifted the theoretical threat score to ${final_score}/100 (${category}).`,
+      delta_explanation,
       findings: hypotheses.map((h, i) => ({
         detector_id: `SIM-SIG-0${i+1}`,
         name: `Simulated: ${h}`,
@@ -284,17 +289,19 @@ ${scan.findings.map(f => `### [${f.severity}] ${f.name} (\`${f.detector_id}\`)
             id: "node-sim-root",
             type: "customNode",
             position: { x: 50, y: 150 },
-            data: { label: req.base_url, entity_type: "SUBMITTED_URL", source_type: "SIMULATED", severity: "CRITICAL", evidence: "Synthetic node" }
+            data: { label: req.base_url, entity_type: "SUBMITTED_URL", source_type: "SIMULATED", severity: final_score >= 65 ? "CRITICAL" : "INFO", evidence: "Synthetic node" }
           }
         ],
         edges: []
       },
       attack_story: {
-        executive_summary: `WHAT-IF SIMULATION: Under hypothetical parameters, asset demonstrates ${category} traits.`,
-        suspected_attack_category: "Simulated Multi-Vector Threat Model",
+        executive_summary: hypotheses.length === 0 
+          ? "WHAT-IF SIMULATION: All attack parameters deactivated. Asset exhibits clean 0/100 baseline posture."
+          : `WHAT-IF SIMULATION: Under hypothetical parameters, asset demonstrates ${category} traits (${final_score}/100).`,
+        suspected_attack_category: hypotheses.length === 0 ? "Clean Baseline Posture" : "Simulated Multi-Vector Threat Model",
         evidence_supporting: hypotheses,
-        potential_impact: "Hypothetical risk modeling for security evaluation.",
-        recommended_defensive_actions: ["Review firewall filtering."],
+        potential_impact: hypotheses.length === 0 ? "None - all threat vectors disabled." : "Hypothetical risk modeling for security evaluation.",
+        recommended_defensive_actions: hypotheses.length === 0 ? ["Maintain regular threat monitoring."] : ["Review firewall filtering."],
         unknowns_and_limitations: ["Synthetic simulation data."],
         generator_type: "SIMULATION_ENGINE"
       }

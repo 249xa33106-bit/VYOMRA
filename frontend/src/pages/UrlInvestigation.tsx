@@ -24,7 +24,6 @@ interface UrlInvestigationProps {
   setCurrentScan: (scan: ScanResponse) => void;
   samples: SampleUrl[];
   userSession?: UserSession | null;
-  onNavigateTakedown?: () => void;
   onNavigateAdmin?: () => void;
 }
 
@@ -33,7 +32,6 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
   setCurrentScan,
   samples,
   userSession,
-  onNavigateTakedown,
   onNavigateAdmin
 }) => {
   const isAdmin = userSession?.role === 'AUTHORITY';
@@ -142,22 +140,38 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
 
         {/* Benchmark Quick Presets for Demo / Hackathon */}
         <div className="mt-4 pt-4 border-t border-slate-200">
-          <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider block mb-2 font-semibold">
-            Benchmark Test Dataset (1-Click Evaluation):
-          </span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">
+              Benchmark Test Dataset (1-Click Instant Evaluation):
+            </span>
+            <span className="text-[10px] font-mono text-slate-400">
+              Select 🚨 Threat or ✅ Benign baseline
+            </span>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {samples.map((s, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setUrlInput(s.url);
-                  handleScan(s.url);
-                }}
-                className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-100 border border-slate-200 hover:border-cyan-400 hover:bg-slate-200 text-slate-700 hover:text-cyan-800 transition-all"
-              >
-                {s.label}
-              </button>
-            ))}
+            {samples.map((s, idx) => {
+              const isBenign = s.category === 'BENIGN';
+              const isMalicious = s.category === 'PUNYCODE_HOMOGLYPH' || s.category === 'RAW_IP_HOST' || s.category === 'TYPOSQUATTING';
+              const btnClass = isBenign
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100 hover:border-emerald-400'
+                : isMalicious
+                ? 'bg-red-50 border-red-300 text-red-800 hover:bg-red-100 hover:border-red-400 font-semibold'
+                : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100 hover:border-amber-400';
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setUrlInput(s.url);
+                    handleScan(s.url);
+                  }}
+                  className={`text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all shadow-xs flex items-center space-x-1.5 ${btnClass}`}
+                  title={`${s.description} (Expected Score: ${s.expected_score_range[0]}-${s.expected_score_range[1]})`}
+                >
+                  <span>{s.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -181,7 +195,7 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
               </div>
             </div>
 
-            {/* Actions: Export PDF Dossier & Takedown Playbook */}
+            {/* Actions: Export PDF Dossier & Admin Quarantine */}
             <div className="flex items-center space-x-2 shrink-0">
               {isAdmin && onNavigateAdmin && (
                 <button
@@ -191,16 +205,6 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
                 >
                   <Ban className="w-4 h-4" />
                   <span>Quarantine Host</span>
-                </button>
-              )}
-              {onNavigateTakedown && (
-                <button
-                  onClick={onNavigateTakedown}
-                  className="px-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-mono font-bold text-xs uppercase rounded-xl transition-all shadow-md shadow-rose-600/20 flex items-center space-x-2"
-                  title="Generate ICANN RAA 3.18 Cease & Desist Takedown Notice"
-                >
-                  <Gavel className="w-4 h-4" />
-                  <span>Initiate Takedown</span>
                 </button>
               )}
               <button

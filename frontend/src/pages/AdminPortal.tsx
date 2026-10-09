@@ -258,7 +258,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ userSession }) => {
             <div>✓ Attack DNA Graph Synthesis</div>
             <div>✓ Brand Impersonation Radar</div>
             <div>✓ Cryptographic PDF Forensic Reports</div>
-            <div>✓ Draft ICANN Takedown Requests</div>
+            <div>✓ What-If Threat Defense Simulator</div>
             <div className="text-red-600 pt-1 border-t border-slate-100 font-bold">
               ✕ Global Domain Quarantine (Admin Only)
             </div>
