@@ -190,43 +190,31 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
               <RiskGauge risk={currentScan.risk} />
             </div>
 
+            {/* AI Summary Card */}
             <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between shadow-sm">
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-violet-600" />
+                    <Sparkles className="w-4 h-4 text-blue-600" />
                     <span className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
-                      AI Incident Explanation
+                      AI Summary
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono bg-violet-100 text-violet-800 border border-violet-200 px-2 py-0.5 rounded uppercase font-semibold">
-                    {currentScan.attack_story.generator_type}
+                  <span className="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    {currentScan.attack_story.suspected_attack_category}
                   </span>
                 </div>
 
-                <div className="text-xs font-mono text-cyan-700 font-bold mb-2">
-                  {currentScan.attack_story.suspected_attack_category}
-                </div>
-
-                <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
+                <div className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3.5 rounded-lg border border-slate-200 mb-3">
                   {currentScan.attack_story.executive_summary}
-                </p>
-
-                <div className="text-[11px] font-mono text-slate-500 mb-1 font-semibold uppercase">
-                  Potential Impact:
                 </div>
-                <p className="text-xs text-slate-600">
-                  {currentScan.attack_story.potential_impact}
-                </p>
-              </div>
 
-              {/* SHA-256 Vault Hash Indicator */}
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                <span className="flex items-center space-x-1">
-                  <Lock className="w-3 h-3 text-cyan-600" />
-                  <span>SHA-256 Integrity Hash:</span>
-                </span>
-                <span className="text-cyan-800 truncate max-w-xs font-semibold">{currentScan.report_hash}</span>
+                {currentScan.attack_story.potential_impact && (
+                  <div className="text-xs text-slate-600 leading-relaxed">
+                    <span className="font-bold text-slate-800">Potential Impact: </span>
+                    <span>{currentScan.attack_story.potential_impact}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

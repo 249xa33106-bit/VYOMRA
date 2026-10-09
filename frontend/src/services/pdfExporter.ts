@@ -161,7 +161,7 @@ export function exportScanToPdf(scan: ScanResponse): void {
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(15, 23, 42);
-  doc.text("3. INCIDENT EXPLANATION & THREAT NARRATIVE", margin, y);
+  doc.text("3. AI SUMMARY", margin, y);
   y += 6;
 
   doc.setFontSize(8.5);
