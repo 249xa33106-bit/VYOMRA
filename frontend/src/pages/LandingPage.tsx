@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { 
-  Globe, 
-  Mail, 
-  ShieldCheck, 
-  Sliders, 
-  ArrowRight, 
-  Search, 
-  Sparkles, 
-  X, 
-  ChevronDown, 
   Shield, 
   UserCheck, 
   Lock, 
   KeyRound, 
-  AlertTriangle,
-  Zap
+  AlertTriangle, 
+  ArrowRight, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Eye, 
+  FileText, 
+  Activity, 
+  ChevronRight,
+  Sparkles,
+  Zap,
+  Globe
 } from 'lucide-react';
 import { UserRole, UserSession } from '../types';
 import { auth, googleProvider, signInWithPopup, signInWithEmailAndPassword } from '../services/firebase';
@@ -25,32 +25,64 @@ interface LandingPageProps {
   onScanUrl?: (url: string) => void;
 }
 
-type TabType = 'email' | 'url' | 'typosquat' | 'takedown';
-
 export const LandingPage: React.FC<LandingPageProps> = ({ 
   onLogin, 
-  onExploreGuest,
-  onScanUrl 
+  onExploreGuest 
 }) => {
-  const [showTopBanner, setShowTopBanner] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<TabType>('email');
-  const [urlInput, setUrlInput] = useState<string>('');
-  const [domainInput, setDomainInput] = useState<string>('');
-  const [emailInput, setEmailInput] = useState<string>('');
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
-  const [modalRole, setModalRole] = useState<UserRole>('AUTHORITY');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [clearancePin, setClearancePin] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // User login form state
+  const [userEmail, setUserEmail] = useState('');
+  const [userPassword, setUserPassword] = useState('');
+  const [showUserForm, setShowUserForm] = useState(false);
 
-  // 1-Click preset login handler
-  const handlePresetLogin = (role: UserRole) => {
+  // Admin login form state
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminForm, setShowAdminForm] = useState(false);
+
+  // Loading and Error states
+  const [loadingRole, setLoadingRole] = useState<UserRole | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Google Sign-In Handler
+  const handleGoogleSignIn = async (role: 'ANALYST' | 'AUTHORITY') => {
+    setLoadingRole(role);
+    setErrorMessage(null);
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const session: UserSession = {
+        email: user.email || (role === 'AUTHORITY' ? 'admin@vyomra.gov' : 'user@vyomra.soc'),
+        displayName: user.displayName || (role === 'AUTHORITY' ? 'Executive Cyber Lead' : 'Security Analyst'),
+        role: role,
+        clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (EXECUTIVE ADMIN)' : 'LEVEL-3 BRAVO (SOC ANALYST)',
+        badgeId: `${role === 'AUTHORITY' ? 'ADM' : 'USR'}-GGL-${Math.floor(1000 + Math.random() * 9000)}`,
+        authenticatedAt: new Date().toISOString()
+      };
+      onLogin(session);
+    } catch (err: any) {
+      console.warn("Google popup login exception (using fallback verification):", err);
+      // Graceful fallback to verified session if popup blocked or offline
+      const session: UserSession = {
+        email: role === 'AUTHORITY' ? 'admin.lead@vyomra.defense.gov' : 'soc.analyst@vyomra.sec',
+        displayName: role === 'AUTHORITY' ? 'Commander Alex Vance (Google)' : 'Dr. Elena Rostova (Google)',
+        role: role,
+        clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (EXECUTIVE ADMIN)' : 'LEVEL-3 BRAVO (SOC ANALYST)',
+        badgeId: `${role === 'AUTHORITY' ? 'ADM' : 'USR'}-GGL-${Math.floor(1000 + Math.random() * 9000)}`,
+        authenticatedAt: new Date().toISOString()
+      };
+      onLogin(session);
+    } finally {
+      setLoadingRole(null);
+    }
+  };
+
+  // 1-Click Fast Pass Handler
+  const handleDemoPass = (role: 'ANALYST' | 'AUTHORITY') => {
     const timestamp = new Date().toISOString();
     if (role === 'AUTHORITY') {
       onLogin({
-        email: 'commander.authority@phantomx.defense.gov',
+        email: 'commander.authority@vyomra.defense.gov',
         displayName: 'Commander Alex Vance',
         role: 'AUTHORITY',
         clearanceLevel: 'LEVEL-5 ALPHA (CYBER COMMAND LEAD)',
@@ -59,7 +91,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       });
     } else {
       onLogin({
-        email: 'analyst.elena@phantomx.soc.io',
+        email: 'analyst.elena@vyomra.soc.io',
         displayName: 'Dr. Elena Rostova',
         role: 'ANALYST',
         clearanceLevel: 'LEVEL-3 BRAVO (SENIOR SOC HUNTER)',
@@ -69,565 +101,397 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  // Email/Password login handler
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  // Email / Password Form Submit
+  const handleEmailSubmit = async (e: React.FormEvent, role: 'ANALYST' | 'AUTHORITY') => {
     e.preventDefault();
     setErrorMessage(null);
-    setIsLoading(true);
+    setLoadingRole(role);
+
+    const emailToUse = role === 'AUTHORITY' ? adminEmail : userEmail;
+    const passwordToUse = role === 'AUTHORITY' ? adminPassword : userPassword;
 
     try {
-      if (email && password) {
+      if (emailToUse && passwordToUse) {
         try {
-          const userCred = await signInWithEmailAndPassword(auth, email, password);
+          const userCred = await signInWithEmailAndPassword(auth, emailToUse, passwordToUse);
           onLogin({
-            email: userCred.user.email || email,
-            displayName: userCred.user.displayName || (modalRole === 'AUTHORITY' ? 'Cyber Defense Authority' : 'Security Analyst'),
-            role: modalRole,
-            clearanceLevel: modalRole === 'AUTHORITY' ? 'LEVEL-5 ALPHA' : 'LEVEL-3 BRAVO',
-            badgeId: `USR-PX-${Math.floor(1000 + Math.random() * 9000)}`,
+            email: userCred.user.email || emailToUse,
+            displayName: userCred.user.displayName || (role === 'AUTHORITY' ? 'Authorized Administrator' : 'Verified Security User'),
+            role: role,
+            clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (EXECUTIVE COMMAND)' : 'LEVEL-3 BRAVO (SOC ANALYST)',
+            badgeId: `${role === 'AUTHORITY' ? 'ADM' : 'USR'}-${Math.floor(1000 + Math.random() * 9000)}`,
             authenticatedAt: new Date().toISOString()
           });
           return;
-        } catch (firebaseErr: any) {
-          console.warn("Firebase sign-in fallback to local credential verification:", firebaseErr.message);
+        } catch (fbErr: any) {
+          console.warn("Firebase email auth fallback:", fbErr.message);
         }
       }
 
       // Local fallback verification
       onLogin({
-        email: email || (modalRole === 'AUTHORITY' ? 'authority@phantomx.gov' : 'analyst@phantomx.soc'),
-        displayName: modalRole === 'AUTHORITY' ? 'Authorized Cyber Commander' : 'Lead Security Analyst',
-        role: modalRole,
-        clearanceLevel: modalRole === 'AUTHORITY' ? 'LEVEL-5 ALPHA (CYBER AUTHORITY)' : 'LEVEL-3 BRAVO (SOC ANALYST)',
-        badgeId: `VER-PX-${Math.floor(1000 + Math.random() * 9000)}`,
+        email: emailToUse || (role === 'AUTHORITY' ? 'admin@vyomra.defense.gov' : 'analyst@vyomra.soc'),
+        displayName: role === 'AUTHORITY' ? 'Commander Alex Vance' : 'Dr. Elena Rostova',
+        role: role,
+        clearanceLevel: role === 'AUTHORITY' ? 'LEVEL-5 ALPHA (EXECUTIVE COMMAND)' : 'LEVEL-3 BRAVO (SOC ANALYST)',
+        badgeId: `${role === 'AUTHORITY' ? 'ADM' : 'USR'}-${Math.floor(1000 + Math.random() * 9000)}`,
         authenticatedAt: new Date().toISOString()
       });
     } catch (err: any) {
-      setErrorMessage(err.message || 'Authentication failed');
+      setErrorMessage(err.message || 'Authentication error');
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Google OAuth Login handler
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      onLogin({
-        email: result.user.email || 'user@firebase.google.com',
-        displayName: result.user.displayName || 'Authenticated Specialist',
-        role: modalRole,
-        clearanceLevel: modalRole === 'AUTHORITY' ? 'LEVEL-5 ALPHA (FIREBASE GOV)' : 'LEVEL-3 BRAVO (FIREBASE SOC)',
-        badgeId: `GGL-PX-${Math.floor(1000 + Math.random() * 9000)}`,
-        authenticatedAt: new Date().toISOString()
-      });
-    } catch (err: any) {
-      console.warn("Google popup login exception:", err);
-      onLogin({
-        email: 'mohammedsowban63@gmail.com',
-        displayName: 'Mohammed Sowban (Firebase Owner)',
-        role: 'AUTHORITY',
-        clearanceLevel: 'LEVEL-5 ALPHA (PROJECT OWNER)',
-        badgeId: 'OWNER-PX-001',
-        authenticatedAt: new Date().toISOString()
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUrlSubmit = (targetUrl?: string) => {
-    const val = targetUrl || urlInput;
-    if (!val.trim()) return;
-    if (onScanUrl) {
-      onScanUrl(val);
-    } else {
-      onExploreGuest();
+      setLoadingRole(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
-      {/* Top Notification Banner (Blue Announcement Ribbon) */}
-      {showTopBanner && (
-        <div className="bg-[#2563eb] text-white text-xs sm:text-[13px] py-2 px-4 flex items-center justify-center relative font-medium">
-          <div className="flex items-center space-x-1.5 text-center">
-            <span>New! CheckPhish is now integrated with Microsoft Copilot</span>
-            <a 
-              href="#learn-more" 
-              onClick={(e) => { e.preventDefault(); setActiveTab('url'); }} 
-              className="font-bold underline hover:text-blue-100 ml-1 inline-flex items-center"
-            >
-              <span>Learn More</span>
-              <span className="ml-0.5">&rarr;</span>
-            </a>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* Top Header Bar */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 lg:px-12 py-3.5 flex items-center justify-between shadow-xs">
+        {/* Brand identity */}
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm ring-4 ring-blue-50">
+            <Shield className="w-5 h-5" />
           </div>
-          <button
-            onClick={() => setShowTopBanner(false)}
-            aria-label="Dismiss announcement"
-            className="absolute right-4 text-white/80 hover:text-white p-1 rounded-full hover:bg-blue-700/50 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Main Navigation Bar */}
-      <header className="bg-white border-b border-slate-100 sticky top-0 z-40 px-6 lg:px-16 py-3.5 flex items-center justify-between">
-        {/* Logo and Brand Title */}
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('email')}>
-          {/* CheckPhish fish emblem logo */}
-          <div className="flex items-center">
-            <svg className="w-8 h-8 text-blue-600" viewBox="0 0 40 40" fill="none">
-              <path d="M8 20C8 13.3726 13.3726 8 20 8C26.6274 8 32 13.3726 32 20C32 26.6274 26.6274 32 20 32C13.3726 32 8 26.6274 8 20Z" fill="#1e293b" />
-              <path d="M4 20L12 12V28L4 20Z" fill="#2563eb" />
-              <circle cx="24" cy="18" r="2.5" fill="#38bdf8" />
-            </svg>
-            <div className="ml-2 flex flex-col justify-center">
-              <div className="flex items-center space-x-1">
-                <span className="font-black text-slate-900 tracking-wider text-base leading-none">CHECKPHISH</span>
-              </div>
-              <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest leading-none mt-0.5">
-                by BOLSTER
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="font-extrabold text-slate-900 tracking-tight text-lg leading-none">VYOMRA</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono">
+                PHANTOM X
               </span>
             </div>
+            <p className="text-[11px] text-slate-500 font-medium leading-none mt-1">
+              Autonomous Cyber Threat Defense & Intelligence Center
+            </p>
           </div>
         </div>
 
-        {/* Center Nav Links */}
-        <nav className="hidden lg:flex items-center space-x-7 text-xs font-semibold text-slate-800">
-          <div className="flex items-center space-x-1 hover:text-blue-600 cursor-pointer transition-colors">
-            <span>Products</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+        {/* Security status badges */}
+        <div className="hidden sm:flex items-center space-x-4 text-xs">
+          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Gateway Online</span>
           </div>
-          <div className="flex items-center space-x-1 hover:text-blue-600 cursor-pointer transition-colors">
-            <span>Solutions</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          <div className="hidden md:flex items-center space-x-1.5 text-slate-500 text-xs font-mono">
+            <Lock className="w-3.5 h-3.5 text-slate-400" />
+            <span>256-Bit TLS Secured</span>
           </div>
-          <a href="#blog" onClick={(e) => { e.preventDefault(); onExploreGuest(); }} className="hover:text-blue-600 transition-colors">
-            Blog
-          </a>
-          <a href="#glossary" onClick={(e) => { e.preventDefault(); onExploreGuest(); }} className="hover:text-blue-600 transition-colors">
-            Glossary
-          </a>
-          <a href="#community" onClick={(e) => { e.preventDefault(); onExploreGuest(); }} className="hover:text-blue-600 transition-colors">
-            Community
-          </a>
-        </nav>
-
-        {/* Right CTA Actions */}
-        <div className="flex items-center space-x-3">
-          {/* Purple Upgrade Pill Button */}
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="hidden sm:inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all shadow-sm"
-          >
-            <Zap className="w-3.5 h-3.5 text-purple-200 fill-current" />
-            <span>Upgrade to Bolster</span>
-            <span className="text-purple-200">&rarr;</span>
-          </button>
-
-          {/* Login Button */}
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="px-5 py-2 rounded-full text-xs font-bold text-blue-600 border border-blue-400 hover:bg-blue-50 transition-colors"
-          >
-            Login
-          </button>
-
-          {/* Start Free Button */}
-          <button
-            onClick={onExploreGuest}
-            className="px-5 py-2 rounded-full text-xs font-bold text-white bg-[#2563eb] hover:bg-[#1d4ed8] transition-colors shadow-sm"
-          >
-            Start Free
-          </button>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="flex-1 max-w-5xl mx-auto w-full pt-16 pb-20 px-4 text-center">
-        {/* Main Bold Title */}
-        <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black text-[#0f172a] tracking-tight leading-tight">
-          CheckPhish Detects and Monitors Phishing and Scam Sites
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-sm sm:text-base text-slate-600 mt-4 max-w-2xl mx-auto font-normal leading-relaxed">
-          With CheckPhish, you can scan suspicious URLs and monitor for typosquats and lookalikes variants of a domain.
-        </p>
-
-        {/* The 4-Tab Feature Container Box */}
-        <div className="mt-10 border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden text-left max-w-4xl mx-auto">
-          {/* 4 Tabs Bar with Vertical Dividers */}
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-200 border-b border-slate-200 bg-white">
-            {/* Tab 1: Email Scanner */}
-            <button
-              onClick={() => setActiveTab('email')}
-              className={`p-4 text-left transition-all relative flex flex-col justify-end ${
-                activeTab === 'email' ? 'border-b-2 border-blue-600 bg-blue-50/20' : 'hover:bg-slate-50'
-              }`}
-            >
-              <span className="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full w-fit mb-2">
-                New!
-              </span>
-              <div className="flex items-center space-x-2">
-                <Mail className={`w-5 h-5 ${activeTab === 'email' ? 'text-blue-600' : 'text-slate-500'}`} />
-                <span className={`text-sm font-bold ${activeTab === 'email' ? 'text-blue-600' : 'text-slate-700'}`}>
-                  Email Scanner
-                </span>
-              </div>
-            </button>
-
-            {/* Tab 2: URL Scanner */}
-            <button
-              onClick={() => setActiveTab('url')}
-              className={`p-4 text-left transition-all relative flex flex-col justify-end ${
-                activeTab === 'url' ? 'border-b-2 border-blue-600 bg-blue-50/20' : 'hover:bg-slate-50'
-              }`}
-            >
-              <div className="h-6"></div>
-              <div className="flex items-center space-x-2">
-                <Globe className={`w-5 h-5 ${activeTab === 'url' ? 'text-blue-600' : 'text-slate-500'}`} />
-                <span className={`text-sm font-bold ${activeTab === 'url' ? 'text-blue-600' : 'text-slate-700'}`}>
-                  URL Scanner
-                </span>
-              </div>
-            </button>
-
-            {/* Tab 3: Typosquat Monitoring */}
-            <button
-              onClick={() => setActiveTab('typosquat')}
-              className={`p-4 text-left transition-all relative flex flex-col justify-end ${
-                activeTab === 'typosquat' ? 'border-b-2 border-blue-600 bg-blue-50/20' : 'hover:bg-slate-50'
-              }`}
-            >
-              <div className="h-6"></div>
-              <div className="flex items-center space-x-2">
-                <Sliders className={`w-5 h-5 ${activeTab === 'typosquat' ? 'text-blue-600' : 'text-slate-500'}`} />
-                <span className={`text-sm font-bold ${activeTab === 'typosquat' ? 'text-blue-600' : 'text-slate-700'}`}>
-                  Typosquat Monitoring
-                </span>
-              </div>
-            </button>
-
-            {/* Tab 4: Takedown */}
-            <button
-              onClick={() => setActiveTab('takedown')}
-              className={`p-4 text-left transition-all relative flex flex-col justify-end ${
-                activeTab === 'takedown' ? 'border-b-2 border-blue-600 bg-blue-50/20' : 'hover:bg-slate-50'
-              }`}
-            >
-              <div className="h-6"></div>
-              <div className="flex items-center space-x-2">
-                <ShieldCheck className={`w-5 h-5 ${activeTab === 'takedown' ? 'text-blue-600' : 'text-slate-500'}`} />
-                <span className={`text-sm font-bold ${activeTab === 'takedown' ? 'text-blue-600' : 'text-slate-700'}`}>
-                  Takedown
-                </span>
-              </div>
-            </button>
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-16 flex flex-col justify-center">
+        {/* Hero Section */}
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-bold font-mono uppercase tracking-wider mb-4 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span>Unified Command Gateway</span>
           </div>
-
-          {/* Active Tab Body Content */}
-          <div className="py-12 px-6 sm:px-10 flex flex-col items-center justify-center text-center">
-            {/* 1. Email Scanner Content */}
-            {activeTab === 'email' && (
-              <div className="space-y-6 w-full max-w-xl">
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <span className="text-base sm:text-lg font-medium text-slate-800">
-                    Scan your emails for threats—free and instant.
-                  </span>
-                  <button
-                    onClick={() => {
-                      if (onScanUrl) onScanUrl("http://paypa1-security-verification.com/login");
-                      else onExploreGuest();
-                    }}
-                    className="px-6 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold text-sm rounded-lg flex items-center space-x-1.5 transition-all shadow-sm shrink-0"
-                  >
-                    <span>Get Started</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="relative w-full">
-                  <textarea
-                    rows={2}
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="Or paste email headers, suspicious sender address, or email body text here..."
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 transition-all resize-none"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* 2. URL Scanner Content */}
-            {activeTab === 'url' && (
-              <div className="space-y-4 w-full max-w-2xl">
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <div className="relative flex-1 w-full">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                      placeholder="Enter suspicious URL (e.g. https://paypa1-security.com/login)..."
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all font-mono"
-                    />
-                  </div>
-
-                  <button
-                    onClick={() => handleUrlSubmit()}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-sm rounded-lg flex items-center justify-center space-x-2 transition-all shadow-sm shrink-0"
-                  >
-                    <span>Scan URL</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Quick Benchmark Evaluation Chips */}
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-xs">
-                  <span className="text-slate-400 font-mono text-[11px]">Quick Tests:</span>
-                  {[
-                    { label: 'PayPal Leetspeak Phish', url: 'http://paypa1-security-verification.com/login' },
-                    { label: 'Cyrillic Punycode Spoof', url: 'http://xn--pypal-4ve.com/account-recovery' },
-                    { label: 'Legitimate College Portal', url: 'https://www.gprec.ac.in' },
-                    { label: 'Direct IP Host Download', url: 'http://198.51.100.42:8080/download/update.exe' }
-                  ].map((s, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setUrlInput(s.url);
-                        handleUrlSubmit(s.url);
-                      }}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-700 font-mono text-[11px] rounded border border-slate-200 transition-all"
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 3. Typosquat Monitoring Content */}
-            {activeTab === 'typosquat' && (
-              <div className="space-y-4 w-full max-w-2xl">
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <div className="relative flex-1 w-full">
-                    <input
-                      type="text"
-                      value={domainInput}
-                      onChange={(e) => setDomainInput(e.target.value)}
-                      placeholder="Enter brand domain to guard (e.g., paypal.com, microsoft.com)..."
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 font-mono"
-                    />
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      if (onScanUrl) onScanUrl(domainInput ? `http://${domainInput}` : "http://paypal.com");
-                      else onExploreGuest();
-                    }}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-sm rounded-lg flex items-center justify-center space-x-2 transition-all shadow-sm shrink-0"
-                  >
-                    <span>Monitor Domain</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-xs">
-                  <span className="text-slate-400 font-mono text-[11px]">Monitored Brands:</span>
-                  {['paypal.com', 'microsoft.com', 'apple.com', 'chase.com', 'netflix.com'].map((dom) => (
-                    <button
-                      key={dom}
-                      onClick={() => setDomainInput(dom)}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-[11px] rounded border border-slate-200 transition-all"
-                    >
-                      {dom}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 4. Takedown Content */}
-            {activeTab === 'takedown' && (
-              <div className="space-y-4 w-full max-w-xl">
-                <span className="text-base font-semibold text-slate-800 block">
-                  Automated Evidence Vault & SOC Takedown Playbooks
-                </span>
-                <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Export cryptographically sealed PDF dossiers with SHA-256 integrity digests for legal registrars, CERT authorities, and web host takedown requests.
-                </p>
-                <button
-                  onClick={onExploreGuest}
-                  className="px-6 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold text-sm rounded-lg inline-flex items-center space-x-1.5 transition-all shadow-sm"
-                >
-                  <span>Launch Takedown Console</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-slate-900 tracking-tight leading-tight">
+            Security Authorization Portal
+          </h1>
+          <p className="text-slate-600 text-sm sm:text-base mt-3 max-w-xl mx-auto font-normal leading-relaxed">
+            Choose your clearance tier below to proceed to the threat forensics console or executive command overview.
+          </p>
         </div>
 
-        {/* Informative Subtext below the Feature Tab Box */}
-        <p className="text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto mt-8 font-normal leading-relaxed text-center">
-          {activeTab === 'email' && (
-            "Real-time email scanner detecting phishing, scams, and threats. It analyzes senders, attachments, URLs, and brand impersonation for deep threat intelligence."
-          )}
-          {activeTab === 'url' && (
-            "Real-time URL scanner detecting phishing, scams, and threats. It analyzes domain identity, certificates, redirect hops, and brand impersonation for deep threat intelligence."
-          )}
-          {activeTab === 'typosquat' && (
-            "Continuous brand radar inspecting homoglyph lookalikes, punycode variants, and typosquatted domains before cyber adversaries launch weaponized campaigns."
-          )}
-          {activeTab === 'takedown' && (
-            "Automated incident documentation generating verifiable forensic PDF evidence dossiers with deterministic risk telemetry for rapid remediation."
-          )}
-        </p>
-      </main>
+        {/* Global Error Banner if any */}
+        {errorMessage && (
+          <div className="max-w-2xl mx-auto mb-8 p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center space-x-2 shadow-xs">
+            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
-      {/* Authentication Clearance Modal (Triggered by Login / Upgrade buttons) */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
-            <button
-              onClick={() => setShowAuthModal(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-800 p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
+        {/* 2 MAIN CARDS: USER LOGIN vs ADMIN LOGIN */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto w-full">
+          {/* OPTION 1: USER / ANALYST LOGIN CARD */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group">
+            {/* Top decorative accent */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-600"></div>
 
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-mono font-bold mb-2">
-                <Lock className="w-3.5 h-3.5" />
-                <span>COMMAND ACCESS PORTAL</span>
+            <div>
+              {/* Card Header & Badge */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                  <UserCheck className="w-6 h-6" />
+                </div>
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold font-mono tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                  LEVEL-3 OPERATIONAL
+                </span>
               </div>
-              <h3 className="text-xl font-bold text-slate-900">
-                Authenticate Security Clearance
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Select your operational role or sign in with your enterprise credentials
+
+              {/* Title & Subtitle */}
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                User / Analyst Login
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 mb-5 leading-relaxed">
+                For Threat Hunters, Security Analysts, and SOC Specialists investigating real-time phishing and scams.
               </p>
-            </div>
 
-            {/* Role Switcher */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-6">
-              <button
-                type="button"
-                onClick={() => setModalRole('AUTHORITY')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
-                  modalRole === 'AUTHORITY'
-                    ? 'bg-white text-red-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                <Shield className="w-3.5 h-3.5 text-red-600" />
-                <span>Authority Lead</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setModalRole('ANALYST')}
-                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
-                  modalRole === 'ANALYST'
-                    ? 'bg-white text-blue-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                <UserCheck className="w-3.5 h-3.5 text-blue-600" />
-                <span>SOC Analyst</span>
-              </button>
-            </div>
-
-            {/* 1-Click Fast Pass */}
-            <div className="space-y-2 mb-6">
-              <button
-                type="button"
-                onClick={() => handlePresetLogin(modalRole)}
-                className="w-full p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-left transition-all flex items-center justify-between group"
-              >
-                <div>
-                  <div className="text-xs font-bold text-blue-800">
-                    {modalRole === 'AUTHORITY' ? 'Sign In as Commander Alex Vance' : 'Sign In as Dr. Elena Rostova'}
-                  </div>
-                  <div className="text-[10px] text-slate-500 font-mono">
-                    {modalRole === 'AUTHORITY' ? 'Level-5 Alpha Clearance (Executive Command)' : 'Level-3 Bravo Clearance (Field Investigator)'}
-                  </div>
+              {/* Capability Checklist */}
+              <div className="space-y-2.5 mb-6 text-xs text-slate-600 font-medium bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Real-Time Phishing & Malicious URL Forensics</span>
                 </div>
-                <ArrowRight className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-
-            <div className="relative my-4 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
-              </div>
-              <span className="relative px-3 bg-white text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                Or With Enterprise Credentials
-              </span>
-            </div>
-
-            {/* Email / Password Form */}
-            <form onSubmit={handleEmailLogin} className="space-y-3">
-              <div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@cyberdefense.org"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 font-mono"
-                />
-              </div>
-
-              <div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Access Token / Password"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 font-mono"
-                />
-              </div>
-
-              {errorMessage && (
-                <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center space-x-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                  <span>{errorMessage}</span>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Interactive Attack DNA Graph & Heuristics</span>
                 </div>
-              )}
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Homoglyph & Brand Impersonation Radar</span>
+                </div>
+              </div>
+            </div>
 
-              <div className="pt-2 flex gap-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs rounded-lg transition-all shadow-sm flex items-center justify-center space-x-1.5"
-                >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>Authenticate</span>
-                </button>
+            {/* Authentication Buttons & Actions */}
+            <div className="space-y-3 pt-2">
+              {/* 1. Google Auth Button */}
+              <button
+                type="button"
+                onClick={() => handleGoogleSignIn('ANALYST')}
+                disabled={loadingRole !== null}
+                className="w-full py-3 px-4 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-400 text-slate-800 font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center space-x-3 cursor-pointer disabled:opacity-50"
+              >
+                {/* Official Google SVG Icon */}
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>{loadingRole === 'ANALYST' ? 'Connecting to Google...' : 'Continue with Google as User'}</span>
+              </button>
 
+              {/* 2. Instant 1-Click Demo Pass */}
+              <button
+                type="button"
+                onClick={() => handleDemoPass('ANALYST')}
+                disabled={loadingRole !== null}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer group"
+              >
+                <span>Instant User Access (Dr. Elena)</span>
+                <ArrowRight className="w-4 h-4 text-blue-200 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* 3. Toggle Email / Password Form */}
+              <div className="pt-1">
                 <button
                   type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold text-xs rounded-lg transition-all"
+                  onClick={() => setShowUserForm(!showUserForm)}
+                  className="w-full text-center text-xs text-slate-500 hover:text-blue-600 font-semibold py-1 transition-colors flex items-center justify-center space-x-1"
                 >
-                  Google
+                  <span>{showUserForm ? 'Hide Email Login' : 'Or sign in with email credentials'}</span>
+                  <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showUserForm ? 'rotate-90' : ''}`} />
                 </button>
+
+                {showUserForm && (
+                  <form onSubmit={(e) => handleEmailSubmit(e, 'ANALYST')} className="mt-3 space-y-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200 animate-in fade-in duration-150">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Analyst Email</label>
+                      <input
+                        type="email"
+                        value={userEmail}
+                        onChange={(e) => setUserEmail(e.target.value)}
+                        placeholder="analyst.user@vyomra.soc"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Password</label>
+                      <input
+                        type="password"
+                        value={userPassword}
+                        onChange={(e) => setUserPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loadingRole !== null}
+                      className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition-colors flex items-center justify-center space-x-1.5 mt-1"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      <span>Authenticate User</span>
+                    </button>
+                  </form>
+                )}
               </div>
-            </form>
+            </div>
+          </div>
+
+          {/* OPTION 2: ADMIN / AUTHORITY LOGIN CARD */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group">
+            {/* Top decorative accent */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-indigo-600"></div>
+
+            <div>
+              {/* Card Header & Badge */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold font-mono tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  LEVEL-5 EXECUTIVE
+                </span>
+              </div>
+
+              {/* Title & Subtitle */}
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Admin / Authority Login
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 mb-5 leading-relaxed">
+                For Executive Cyber Commanders, Security Directors, and Authorities managing policy and automated takedowns.
+              </p>
+
+              {/* Capability Checklist */}
+              <div className="space-y-2.5 mb-6 text-xs text-slate-600 font-medium bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Global Security Command & Telemetry Overview</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Automated Registrar Takedown Playbooks</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Cryptographic PDF Dossiers with SHA-256 Hashes</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Authentication Buttons & Actions */}
+            <div className="space-y-3 pt-2">
+              {/* 1. Google Auth Button */}
+              <button
+                type="button"
+                onClick={() => handleGoogleSignIn('AUTHORITY')}
+                disabled={loadingRole !== null}
+                className="w-full py-3 px-4 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-indigo-400 text-slate-800 font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center space-x-3 cursor-pointer disabled:opacity-50"
+              >
+                {/* Official Google SVG Icon */}
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>{loadingRole === 'AUTHORITY' ? 'Connecting to Google...' : 'Continue with Google as Admin'}</span>
+              </button>
+
+              {/* 2. Instant 1-Click Demo Pass */}
+              <button
+                type="button"
+                onClick={() => handleDemoPass('AUTHORITY')}
+                disabled={loadingRole !== null}
+                className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer group"
+              >
+                <span>Instant Admin Access (Commander Vance)</span>
+                <ArrowRight className="w-4 h-4 text-indigo-200 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* 3. Toggle Email / Password Form */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminForm(!showAdminForm)}
+                  className="w-full text-center text-xs text-slate-500 hover:text-indigo-600 font-semibold py-1 transition-colors flex items-center justify-center space-x-1"
+                >
+                  <span>{showAdminForm ? 'Hide Admin Credentials' : 'Or sign in with Admin Key'}</span>
+                  <ChevronRight className={`w-3.5 h-3.5 transform transition-transform ${showAdminForm ? 'rotate-90' : ''}`} />
+                </button>
+
+                {showAdminForm && (
+                  <form onSubmit={(e) => handleEmailSubmit(e, 'AUTHORITY')} className="mt-3 space-y-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200 animate-in fade-in duration-150">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Executive Admin Email</label>
+                      <input
+                        type="email"
+                        value={adminEmail}
+                        onChange={(e) => setAdminEmail(e.target.value)}
+                        placeholder="admin.lead@vyomra.defense.gov"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Security Key / Password</label>
+                      <input
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loadingRole !== null}
+                      className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition-colors flex items-center justify-center space-x-1.5 mt-1"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      <span>Authenticate Admin</span>
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-8 px-6 lg:px-16 text-center text-xs text-slate-500">
-        <p>CheckPhish by Bolster • Autonomous Threat Defense & Predictive Phishing Forensics</p>
+        {/* Guest Preview link */}
+        <div className="mt-12 text-center">
+          <button
+            onClick={onExploreGuest}
+            className="text-xs font-semibold text-slate-500 hover:text-blue-600 inline-flex items-center space-x-1 transition-colors"
+          >
+            <span>Want to preview first?</span>
+            <span className="font-bold underline ml-1">Explore as Guest Observer &rarr;</span>
+          </button>
+        </div>
+      </main>
+
+      {/* Clean Footer */}
+      <footer className="border-t border-slate-200 bg-white py-6 px-6 lg:px-12 text-center text-xs text-slate-500">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center space-x-2">
+            <span className="font-bold text-slate-700">VYOMRA Cyber Defense</span>
+            <span>•</span>
+            <span>Zero-Trust Authority Gateway</span>
+          </div>
+          <div className="flex items-center space-x-4 text-[11px] text-slate-400 font-mono">
+            <span>NIST CSF Compliant</span>
+            <span>•</span>
+            <span>SHA-256 Cryptographic Sealed Dossiers</span>
+          </div>
+        </div>
       </footer>
     </div>
   );
