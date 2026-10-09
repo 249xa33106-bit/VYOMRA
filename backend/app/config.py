@@ -23,7 +23,7 @@ class Settings(BaseModel):
     
     # Security Constraints
     allow_active_redirect_fetching: bool = os.getenv("ALLOW_ACTIVE_REDIRECT_FETCHING", "true").lower() in ("true", "1", "yes")
-    redirect_timeout_seconds: float = float(os.getenv("REDIRECT_TIMEOUT_SECONDS", "4.0"))
+    redirect_timeout_seconds: float = float(os.getenv("REDIRECT_TIMEOUT_SECONDS", "1.5"))
     max_redirect_hops: int = int(os.getenv("MAX_REDIRECT_HOPS", "5"))
     max_response_bytes: int = int(os.getenv("MAX_RESPONSE_BYTES", "1048576"))
     

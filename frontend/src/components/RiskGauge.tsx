@@ -81,7 +81,7 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({ risk, isSimulation }) => {
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               fill="transparent"
-              className="transition-all duration-1000 ease-out"
+              className="transition-all duration-200 ease-out"
             />
           </svg>
 
