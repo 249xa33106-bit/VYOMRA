@@ -1,0 +1,205 @@
+import React, { useState, useEffect } from 'react';
+import { Sidebar } from './components/Sidebar';
+import { Navbar } from './components/Navbar';
+import { LandingPage } from './pages/LandingPage';
+import { Overview } from './pages/Overview';
+import { UrlInvestigation } from './pages/UrlInvestigation';
+import { AttackGraphView } from './pages/AttackGraphView';
+import { BrandImpersonationView } from './pages/BrandImpersonationView';
+import { ThreatIntelView } from './pages/ThreatIntelView';
+import { ScanHistoryView } from './pages/ScanHistoryView';
+import { WhatIfSimulatorView } from './pages/WhatIfSimulatorView';
+import { ReportsView } from './pages/ReportsView';
+import { SettingsView } from './pages/SettingsView';
+import { ScanResponse, SampleUrl, UserSession } from './types';
+import { api } from './services/api';
+
+export function App() {
+  const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing');
+  const [userSession, setUserSession] = useState<UserSession | null>(null);
+  const [currentTab, setCurrentTab] = useState<string>('investigate');
+  const [currentScan, setCurrentScan] = useState<ScanResponse | null>(null);
+  const [samples, setSamples] = useState<SampleUrl[]>([]);
+
+  useEffect(() => {
+    // Check saved local session
+    const saved = localStorage.getItem('px_session');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setUserSession(parsed);
+        setViewMode('app');
+      } catch (e) {
+        localStorage.removeItem('px_session');
+      }
+    }
+
+    // Fetch initial sample benchmark dataset
+    api.getSampleDataset()
+      .then(setSamples)
+      .catch(console.error);
+
+    // Fetch most recent scan to populate initial active state
+    api.listScans()
+      .then(res => {
+        if (res.scans && res.scans.length > 0) {
+          api.getScan(res.scans[0].scan_id)
+            .then(setCurrentScan)
+            .catch(console.error);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const handleLogin = (session: UserSession) => {
+    setUserSession(session);
+    localStorage.setItem('px_session', JSON.stringify(session));
+    setViewMode('app');
+    setCurrentTab(session.role === 'AUTHORITY' ? 'overview' : 'investigate');
+  };
+
+  const handleExploreGuest = () => {
+    const guestSession: UserSession = {
+      email: 'guest.analyst@phantomx.preview',
+      displayName: 'Guest Threat Investigator',
+      role: 'ANALYST',
+      clearanceLevel: 'LEVEL-1 PREVIEW (READ-ONLY)',
+      badgeId: 'GUEST-001',
+      authenticatedAt: new Date().toISOString()
+    };
+    setUserSession(guestSession);
+    setViewMode('app');
+    setCurrentTab('investigate');
+  };
+
+  const handleSignOut = () => {
+    setUserSession(null);
+    localStorage.removeItem('px_session');
+    setViewMode('landing');
+  };
+
+  const handleSelectScan = async (scanId: string) => {
+    try {
+      const scan = await api.getScan(scanId);
+      setCurrentScan(scan);
+      setCurrentTab('investigate');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const getPageTitle = () => {
+    switch (currentTab) {
+      case 'overview':
+        return { title: 'Security Command Overview', subtitle: 'Global telemetry and incident status' };
+      case 'investigate':
+        return { title: 'URL Investigation Console', subtitle: 'Multi-layer threat forensics and detection' };
+      case 'graph':
+        return { title: 'Attack DNA Graph Topology', subtitle: 'Synthesized relationship nodes and edges' };
+      case 'brand':
+        return { title: 'Brand Impersonation Radar', subtitle: 'Homoglyph & typosquatting detection' };
+      case 'intel':
+        return { title: 'Threat Intelligence Providers', subtitle: 'Reputation lookups and telemetry feeds' };
+      case 'history':
+        return { title: 'Digital Evidence Vault', subtitle: 'Persisted scan history and cryptographic hashes' };
+      case 'simulator':
+        return { title: 'What-If Defense Simulator', subtitle: 'Hypothetical risk scenario sandbox' };
+      case 'reports':
+        return { title: 'Forensic Reports & Verification', subtitle: 'Serialized dossiers and hash integrity' };
+      case 'settings':
+        return { title: 'Settings & Security Controls', subtitle: 'Architecture and isolation policies' };
+      default:
+        return { title: 'PHANTOM X', subtitle: 'Autonomous Cyber Defense' };
+    }
+  };
+
+  // If in landing page view mode, display the full Public Landing Page
+  if (viewMode === 'landing') {
+    return (
+      <LandingPage
+        onLogin={handleLogin}
+        onExploreGuest={handleExploreGuest}
+      />
+    );
+  }
+
+  const { title, subtitle } = getPageTitle();
+
+  return (
+    <div className="flex h-screen bg-[#050b14] text-slate-100 overflow-hidden font-sans">
+      {/* Persistent Navigation Sidebar */}
+      <Sidebar
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        activeScanId={currentScan?.scan_id}
+        onGoToLanding={() => setViewMode('landing')}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Navbar
+          title={title}
+          subtitle={subtitle}
+          activeScanId={currentScan?.scan_id}
+          userSession={userSession}
+          onSignOut={handleSignOut}
+        />
+
+        <main className="flex-1 overflow-y-auto bg-[#070d17]/50">
+          {currentTab === 'overview' && (
+            <Overview
+              onSelectScan={handleSelectScan}
+              onNavigateInvestigate={() => setCurrentTab('investigate')}
+            />
+          )}
+
+          {currentTab === 'investigate' && (
+            <UrlInvestigation
+              currentScan={currentScan}
+              setCurrentScan={setCurrentScan}
+              samples={samples}
+            />
+          )}
+
+          {currentTab === 'graph' && (
+            <AttackGraphView
+              currentScan={currentScan}
+              onNavigateInvestigate={() => setCurrentTab('investigate')}
+            />
+          )}
+
+          {currentTab === 'brand' && (
+            <BrandImpersonationView
+              currentScan={currentScan}
+              onScanUrl={(url) => {
+                setCurrentTab('investigate');
+              }}
+            />
+          )}
+
+          {currentTab === 'intel' && (
+            <ThreatIntelView currentScan={currentScan} />
+          )}
+
+          {currentTab === 'history' && (
+            <ScanHistoryView onSelectScan={handleSelectScan} />
+          )}
+
+          {currentTab === 'simulator' && (
+            <WhatIfSimulatorView />
+          )}
+
+          {currentTab === 'reports' && (
+            <ReportsView currentScan={currentScan} />
+          )}
+
+          {currentTab === 'settings' && (
+            <SettingsView />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;

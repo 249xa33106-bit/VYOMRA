@@ -1,0 +1,41 @@
+# Node dependencies & build artifacts
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+build/
+.cache/
+
+# Python artifacts
+__pycache__/
+backend/**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & state
+*.db*
+*.sqlite*
+backend/phantom_x.db*
+*.log
+
+# Firebase local cache
+.firebase/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
