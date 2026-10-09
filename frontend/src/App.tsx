@@ -143,8 +143,6 @@ export function App() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Navbar
           title={title}
-          subtitle={subtitle}
-          activeScanId={currentScan?.scan_id}
           userSession={userSession}
           onSignOut={handleSignOut}
         />

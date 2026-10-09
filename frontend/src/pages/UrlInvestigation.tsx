@@ -5,7 +5,6 @@ import {
   AlertTriangle, 
   ShieldCheck, 
   Sparkles, 
-  Layers, 
   Download, 
   Lock, 
   Terminal,
@@ -258,68 +257,30 @@ export const UrlInvestigation: React.FC<UrlInvestigationProps> = ({
           {/* Forensic Findings Breakdown */}
           <FindingsList findings={currentScan.findings} />
 
-          {/* Redirect Time Machine & Threat Intelligence Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Redirect Time Machine */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-cyan-600" />
-                <span>Redirect Time Machine ({currentScan.redirect_chain.length} observed hops)</span>
-              </h3>
-              {currentScan.redirect_chain.length === 0 ? (
-                <div className="text-xs font-mono text-slate-500 py-6 text-center">
-                  No multi-hop redirects observed. Target evaluated as direct destination.
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {currentScan.redirect_chain.map((hop, i) => (
-                    <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono">
-                      <div className="flex items-center justify-between text-[11px] mb-1">
-                        <span className="text-cyan-700 font-bold">Hop #{hop.hop_number}</span>
-                        <span className={`px-2 py-0.5 rounded font-bold ${
-                          hop.blocked_reason ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-700'
-                        }`}>
-                          {hop.blocked_reason ? 'BLOCKED' : `HTTP ${hop.status_code || 200}`}
-                        </span>
-                      </div>
-                      <div className="text-slate-900 truncate font-semibold">{hop.hostname}</div>
-                      <div className="text-[10px] text-slate-500 truncate">{hop.url}</div>
-                      {hop.blocked_reason && (
-                        <div className="mt-1 text-[11px] text-red-700 bg-red-50 p-1.5 rounded border border-red-200">
-                          {hop.blocked_reason}
-                        </div>
-                      )}
+          {/* Threat Intelligence Telemetry */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
+              <ShieldCheck className="w-4 h-4 text-violet-600" />
+              <span>Reputation Providers Telemetry</span>
+            </h3>
+            <div className="space-y-2.5">
+              {currentScan.provider_findings.map((p, i) => (
+                <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono flex items-center justify-between">
+                  <div>
+                    <div className="text-slate-900 font-bold">{p.provider_name}</div>
+                    <div className="text-[10px] text-slate-500">
+                      {p.details?.note || p.threat_type || 'Observed at: ' + p.observation_time.slice(0, 19)}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Threat Intelligence Lookups */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-violet-600" />
-                <span>Reputation Providers Telemetry</span>
-              </h3>
-              <div className="space-y-2.5">
-                {currentScan.provider_findings.map((p, i) => (
-                  <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono flex items-center justify-between">
-                    <div>
-                      <div className="text-slate-900 font-bold">{p.provider_name}</div>
-                      <div className="text-[10px] text-slate-500">
-                        {p.details?.note || p.threat_type || 'Observed at: ' + p.observation_time.slice(0, 19)}
-                      </div>
-                    </div>
-                    <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${
-                      p.is_malicious ? 'bg-red-100 text-red-700 border border-red-300' :
-                      p.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
-                      'bg-slate-200 text-slate-700 border border-slate-300'
-                    }`}>
-                      {p.is_malicious ? 'THREAT MATCH' : p.status}
-                    </span>
                   </div>
-                ))}
-              </div>
+                  <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${
+                    p.is_malicious ? 'bg-red-100 text-red-700 border border-red-300' :
+                    p.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                    'bg-slate-200 text-slate-700 border border-slate-300'
+                  }`}>
+                    {p.is_malicious ? 'THREAT MATCH' : p.status}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
