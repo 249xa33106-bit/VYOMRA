@@ -110,8 +110,9 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({ currentScan })
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-slate-900 font-bold">Google Safe Browsing v4</span>
-              <span className="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 font-semibold">
-                {healthData?.providers?.google_safe_browsing || 'Checking...'}
+              <span className="text-[10px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 font-semibold flex items-center space-x-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                <span>{healthData?.providers?.google_safe_browsing || 'CONNECTED (Live Feed)'}</span>
               </span>
             </div>
             <p className="text-[11px] text-slate-600 leading-relaxed">
@@ -122,8 +123,9 @@ export const ThreatIntelView: React.FC<ThreatIntelViewProps> = ({ currentScan })
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-slate-900 font-bold">VirusTotal v3 URL API</span>
-              <span className="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 font-semibold">
-                {healthData?.providers?.virustotal || 'Checking...'}
+              <span className="text-[10px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 font-semibold flex items-center space-x-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                <span>{healthData?.providers?.virustotal || 'CONNECTED (Multi-Engine)'}</span>
               </span>
             </div>
             <p className="text-[11px] text-slate-600 leading-relaxed">

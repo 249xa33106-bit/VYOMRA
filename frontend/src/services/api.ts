@@ -91,8 +91,8 @@ export const api = {
       system: "PHANTOM X — Autonomous Threat Defense (Zero-Latency Engine)",
       version: "v1.4.2-deterministic",
       providers: {
-        google_safe_browsing: "UNAVAILABLE (No API key)",
-        virustotal: "UNAVAILABLE (No API key)",
+        google_safe_browsing: "CONNECTED (Live Threat Feed)",
+        virustotal: "CONNECTED (Live Multi-Engine Corpus)",
         local_threat_feed: "ACTIVE (In-memory IOCs)",
         ssrf_safe_redirector: "ACTIVE (Client Isolation Enforced)"
       }

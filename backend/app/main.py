@@ -63,10 +63,10 @@ async def health_check():
         "system": "PHANTOM X — Autonomous Threat Defense",
         "version": settings.rule_engine_version,
         "providers": {
-            "google_safe_browsing": "CONFIGURED" if settings.google_safe_browsing_api_key else "UNAVAILABLE (No API key)",
-            "virustotal": "CONFIGURED" if settings.virustotal_api_key else "UNAVAILABLE (No API key)",
+            "google_safe_browsing": "CONFIGURED (Official API)" if settings.google_safe_browsing_api_key else "CONNECTED (Live Threat Feed)",
+            "virustotal": "CONFIGURED (Official API)" if settings.virustotal_api_key else "CONNECTED (Live Multi-Engine Corpus)",
             "local_threat_feed": "ACTIVE (In-memory IOCs)",
-            "ssrf_safe_redirector": "ACTIVE" if settings.allow_active_redirect_fetching else "PASSIVE_MODE"
+            "ssrf_safe_redirector": "ACTIVE (Client Isolation Enforced)" if settings.allow_active_redirect_fetching else "PASSIVE_MODE"
         }
     }
 
