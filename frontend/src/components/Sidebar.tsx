@@ -29,7 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'investigate', label: 'URL Investigation', icon: Search, badge: 'CORE' },
+    { id: 'investigate', label: 'User Investigation', icon: Search, badge: 'CORE' },
     { id: 'graph', label: 'Attack DNA Graph', icon: GitFork, badge: activeScanId ? 'ACTIVE' : undefined },
     { id: 'brand', label: 'Brand Impersonation', icon: ShieldAlert },
     { id: 'intel', label: 'Threat Intelligence', icon: Radar },
@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Navigation Links */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <div className="px-3 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
-          Investigation Console
+          User Investigation Console
         </div>
         {navItems.map((item) => {
           const Icon = item.icon;

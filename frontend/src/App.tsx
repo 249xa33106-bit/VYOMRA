@@ -48,7 +48,7 @@ export function App() {
     setUserSession(session);
     localStorage.setItem('px_session', JSON.stringify(session));
     setViewMode('app');
-    setCurrentTab(session.role === 'AUTHORITY' ? 'overview' : 'investigate');
+    setCurrentTab('investigate');
   };
 
   const handleExploreGuest = () => {
@@ -84,9 +84,9 @@ export function App() {
   const getPageTitle = () => {
     switch (currentTab) {
       case 'overview':
-        return { title: 'Security Command Overview', subtitle: 'Global telemetry and incident status' };
+        return { title: 'Security Command Overview' };
       case 'investigate':
-        return { title: 'URL Investigation Console', subtitle: 'Multi-layer threat forensics and detection' };
+        return { title: 'User Investigation Console' };
       case 'graph':
         return { title: 'Attack DNA Graph Topology', subtitle: 'Synthesized relationship nodes and edges' };
       case 'brand':
